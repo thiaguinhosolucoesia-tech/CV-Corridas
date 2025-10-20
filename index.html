@@ -238,7 +238,7 @@
             padding-bottom: 5px;
         }
         
-        /* CORREÇÃO DE CSS V3.6: Adiciona scroll em listas longas do admin */
+        /* CORREÇÃO DE CSS V3.7: Adiciona scroll em listas longas do admin */
         #pending-list, #approved-list {
             display: grid;
             grid-template-columns: 1fr;
@@ -247,7 +247,7 @@
             margin: 0 auto;
             max-height: 40vh; /* Altura máxima para a lista */
             overflow-y: auto; /* Adiciona scroll se a lista for maior */
-            padding-right: 5px; /* Espaço para a barra de scroll */
+            padding: 5px; /* Espaço para a barra de scroll */
         }
         
         .pending-item, .approved-item {
@@ -269,7 +269,7 @@
             font-size: 0.9em;
             color: #555;
             margin-left: 10px;
-            display: block; /* Mostra nomes abaixo do email */
+            display: block; 
         }
         
         .admin-buttons {
@@ -638,7 +638,7 @@
         /* MODAL E FORMULÁRIO (DARK)                         */
         /* ================================================= */
         
-        /* CORREÇÃO DE CSS V3.6: Adiciona altura máxima e flexbox para o modal */
+        /* CORREÇÃO DE CSS V3.7: Regra original, sem 'display: flex' */
         dialog {
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 15px;
@@ -646,11 +646,13 @@
             width: 90%;
             max-width: 600px;
             padding: 0;
-            /* overflow: hidden; -> Esta linha foi REMOVIDA */
+            overflow: hidden; /* Mantido como no seu V3.5 original */
             background: #2a2a3a;
             color: #f0f0f0;
-            
-            /* NOVAS REGRAS */
+        }
+        
+        /* CORREÇÃO DE CSS V3.7: Aplica flex e scroll APENAS quando o modal está [open] */
+        dialog[open] {
             max-height: 90vh; /* Altura máxima de 90% da tela */
             display: flex;
             flex-direction: column;
@@ -661,7 +663,6 @@
             backdrop-filter: blur(5px);
         }
 
-        /* CORREÇÃO DE CSS V3.6: Impede que o header encolha */
         .modal-header {
             padding: 20px 30px;
             background: #1f2027;
@@ -669,21 +670,19 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-shrink: 0; 
+            flex-shrink: 0; /* Impede que o header encolha */
         }
 
         .modal-header h2 {
             color: #c5cae9;
         }
 
-        /* CORREÇÃO DE CSS V3.6: Adiciona scroll ao corpo do modal */
+        /* CORREÇÃO DE CSS V3.7: Adiciona scroll ao corpo do modal */
         .modal-body {
             padding: 30px;
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
-
-            /* NOVAS REGRAS */
             overflow-y: auto; /* Adiciona scroll VERTICAL se o conteúdo for maior */
             flex-grow: 1;     /* Faz o corpo ocupar o espaço disponível */
         }
@@ -764,7 +763,6 @@
         }
 
 
-        /* CORREÇÃO DE CSS V3.6: Impede que o footer encolha */
         .modal-footer {
             padding: 20px 30px;
             background: #1f2027;
@@ -772,7 +770,7 @@
             display: flex;
             justify-content: flex-end;
             gap: 15px;
-            flex-shrink: 0;
+            flex-shrink: 0; /* Impede que o footer encolha */
         }
 
         .btn {
@@ -869,7 +867,8 @@
             .race-card-list {
                 grid-template-columns: 1fr;
             }
-
+            
+            /* CORREÇÃO DE CSS V3.7: Garante que no mobile o modal-body use 1 coluna */
             .modal-body {
                 grid-template-columns: 1fr;
             }
