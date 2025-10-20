@@ -269,13 +269,13 @@
             font-size: 0.9em;
             color: #555;
             margin-left: 10px;
-            display: block; 
+            display: block; /* Mostra nomes abaixo do email */
         }
         
         .admin-buttons {
             display: flex;
             gap: 10px;
-            flex-wrap: wrap; /* Permite que os botões quebrem a linha em telas pequenas */
+            flex-wrap: wrap; /* CORREÇÃO DE CSS V3.7: Permite que os botões quebrem a linha em telas pequenas */
             justify-content: flex-end;
         }
         
@@ -638,7 +638,7 @@
         /* MODAL E FORMULÁRIO (DARK)                         */
         /* ================================================= */
         
-        /* CORREÇÃO DE CSS V3.7: Regra original, sem 'display: flex' */
+        /* CORREÇÃO DE CSS V3.7: Regra original, 'overflow: hidden' foi removido */
         dialog {
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 15px;
@@ -646,14 +646,14 @@
             width: 90%;
             max-width: 600px;
             padding: 0;
-            overflow: hidden; /* Mantido como no seu V3.5 original */
+            /* overflow: hidden; */ /* <- REMOVIDO */
             background: #2a2a3a;
             color: #f0f0f0;
         }
-        
+
         /* CORREÇÃO DE CSS V3.7: Aplica flex e scroll APENAS quando o modal está [open] */
         dialog[open] {
-            max-height: 90vh; /* Altura máxima de 90% da tela */
+            max-height: 90vh; /* Limita a altura em telas pequenas/mobile */
             display: flex;
             flex-direction: column;
         }
@@ -663,6 +663,7 @@
             backdrop-filter: blur(5px);
         }
 
+        /* CORREÇÃO DE CSS V3.7: Impede que o header encolha */
         .modal-header {
             padding: 20px 30px;
             background: #1f2027;
@@ -670,7 +671,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-shrink: 0; /* Impede que o header encolha */
+            flex-shrink: 0;
         }
 
         .modal-header h2 {
@@ -762,7 +763,7 @@
             margin-bottom: 0;
         }
 
-
+        /* CORREÇÃO DE CSS V3.7: Impede que o footer encolha */
         .modal-footer {
             padding: 20px 30px;
             background: #1f2027;
@@ -770,7 +771,7 @@
             display: flex;
             justify-content: flex-end;
             gap: 15px;
-            flex-shrink: 0; /* Impede que o footer encolha */
+            flex-shrink: 0;
         }
 
         .btn {
@@ -1421,10 +1422,10 @@
             if (raceId) {
                 dom.modalTitle.textContent = 'Editar Corrida';
                 dom.btnDelete.classList.remove('hidden');
-                const race = db.races[raceId];
+                const race = db.races[raceId]; // Correção: Acessa o objeto, não o array
                 if (!race) return;
 
-                document.getElementById('race-id').value = raceId;
+                document.getElementById('race-id').value = raceId; // Usa o ID (chave do objeto)
                 document.getElementById('raceName').value = race.raceName;
                 document.getElementById('raceDate').value = race.date;
                 document.getElementById('raceDistance').value = race.distance;
@@ -1496,6 +1497,7 @@
             const dbPath = `/users/${currentViewingUid}/races/`;
 
             if (id) {
+                // Atualiza (set)
                 firebase.database().ref(dbPath).child(id).set(raceData)
                     .then(closeModal)
                     .catch(err => {
@@ -1503,6 +1505,7 @@
                         alert("Erro ao salvar: " + err.message);
                     });
             } else {
+                // Cria (push)
                 const newRaceRef = firebase.database().ref(dbPath).push();
                 newRaceRef.set(raceData)
                     .then(closeModal)
@@ -1511,6 +1514,7 @@
                          alert("Erro ao salvar: " + err.message);
                     });
             }
+            // O listener 'on(value)' em loadRaces() cuidará de re-renderizar
         }
 
         function deleteRace(raceId) {
@@ -1519,15 +1523,16 @@
                 return;
             }
             
-            const race = db.races[raceId];
+            const race = db.races[raceId]; // Acessa o objeto
             if (!confirm(`Tem certeza que deseja excluir esta corrida?\n\n${race.raceName} (${race.date})`)) return;
 
             firebase.database().ref(`/users/${currentViewingUid}/races/`).child(raceId).remove()
-                .then(closeModal)
+                .then(closeModal) // Fecha o modal após a exclusão
                 .catch(err => {
                     console.error("Erro ao excluir:", err);
                     alert("Erro ao excluir: " + err.message);
                 });
+            // O listener 'on(value)' em loadRaces() cuidará de re-renderizar
         }
 
         function renderAll() {
@@ -1559,6 +1564,7 @@
             dom.summaryGrid.innerHTML = '<div class="loader">Calculando...</div>';
             dom.historyContainer.innerHTML = '<div class="loader">Carregando histórico...</div>';
             
+            // O .on() escuta por mudanças em tempo real (criação, edição, exclusão)
             racesRef.on('value', (snapshot) => {
                 db.races = snapshot.val() || {};
                 renderAll();
