@@ -91,12 +91,6 @@
             align-items: center;
             gap: 8px;
         }
-        
-        #user-info img {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-        }
 
         .hidden {
             display: none !important;
@@ -143,6 +137,24 @@
             color: #f44336;
             font-weight: 600;
             margin-top: 10px;
+            min-height: 1.2em;
+        }
+        
+        .login-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .login-buttons .auth-btn {
+            flex-grow: 1;
+        }
+        
+        #btn-signup-submit {
+            background: #6c757d;
+        }
+        #btn-signup-submit:hover {
+             background: #5a6268;
         }
 
         /* ================================================= */
@@ -152,7 +164,8 @@
         #public-view {
             padding: 30px;
             text-align: center;
-            background: #1a1a2e;
+            background: #1f2027; /* Um pouco mais claro que o login-view */
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         #public-view h2 {
@@ -711,13 +724,18 @@
 
         <div id="login-or-public-view">
             
-            <div id="login-view" class="hidden">
+            <div id="login-view">
                 <h2>Acessar Meu Currículo</h2>
                 <form id="login-form">
                     <input type="email" id="login-email" placeholder="E-mail" required>
                     <input type="password" id="login-password" placeholder="Senha" required>
-                    <button type="submit" class="auth-btn btn-primary" id="btn-login-submit">Entrar</button>
-                    <div id="login-error" class="hidden"></div>
+                    
+                    <div class="login-buttons">
+                         <button type="button" class="auth-btn btn-primary" id="btn-login-submit">Entrar</button>
+                         <button type="button" class="auth-btn" id="btn-signup-submit">Cadastrar Novo Usuário</button>
+                    </div>
+                   
+                    <div id="login-error"></div>
                 </form>
             </div>
 
@@ -845,7 +863,7 @@
 
     <script>
         // =================================================================
-        // ARQUITETURA V3.1 - INICIALIZAÇÃO DO FIREBASE (COM SUAS CHAVES)
+        // ARQUITETURA V3.2 - INICIALIZAÇÃO DO FIREBASE (COM SUAS CHAVES)
         // =================================================================
         const firebaseConfig = {
           apiKey: "AIzaSyAyMTzM7sem903SLJsmBeMF3XyvaeGv7Hg",
@@ -858,7 +876,7 @@
         };
         
         // =================================================================
-        // ARQUITETURA V3.1 - LÓGICA DA APLICAÇÃO (EMAIL/SENHA + RTDB)
+        // ARQUITETURA V3.2 - LÓGICA DA APLICAÇÃO (CADASTRO + LOGIN)
         // =================================================================
 
         // --- Variáveis Globais do App ---
@@ -868,15 +886,13 @@
         };
         
         let firebaseApp, database, auth;
-        let authUser = null; // Armazena o usuário logado
-        let currentViewingUid = null; // UID do perfil sendo visualizado
-        let isAdmin = false; // Flag de Admin
+        let authUser = null; 
+        let currentViewingUid = null; 
+        let isAdmin = false; 
         
-        // CORREÇÃO: Chaves de dados estáticas para corresponder ao seu JSON
         const RUNNER_1_KEY = "runner1";
         const RUNNER_2_KEY = "runner2";
         
-        // Configuração de perfil padrão (será sobreposta pelo Firebase)
         let RUNNER_1_PROFILE = { name: 'Corredor 1', nameShort: 'Corredor 1', emoji: '🏃‍♂️' };
         let RUNNER_2_PROFILE = { name: 'Corredora 2', nameShort: 'Corredora 2', emoji: '🏃‍♀️' };
         
@@ -891,6 +907,8 @@
             loginEmail: document.getElementById('login-email'),
             loginPassword: document.getElementById('login-password'),
             loginError: document.getElementById('login-error'),
+            btnLoginSubmit: document.getElementById('btn-login-submit'), // Botão Entrar
+            btnSignUpSubmit: document.getElementById('btn-signup-submit'), // Botão Cadastrar
             publicView: document.getElementById('public-view'),
             publicProfileList: document.getElementById('public-profile-list'),
             userContent: document.getElementById('user-content'),
@@ -952,15 +970,11 @@
 
         // --- Funções de Lógica da Aplicação ---
 
-        /**
-         * Atualiza a UI com base no perfil carregado (do db.profile)
-         */
         function updateProfileUI() {
             const profile = db.profile;
             if (profile && profile.runner1Name && profile.runner2Name) {
-                // Carrega os nomes do perfil do banco de dados
-                RUNNER_1_PROFILE = { name: profile.runner1Name, nameShort: profile.runner1Name.split(' ')[0], emoji: '🏃‍♂️' };
-                RUNNER_2_PROFILE = { name: profile.runner2Name, nameShort: profile.runner2Name.split(' ')[0], emoji: '🏃‍♀️' };
+                RUNNER_1_PROFILE = { name: profile.runner1Name, nameShort: profile.runner1Name.split(' ')[0] || "Corredor", emoji: '🏃‍♂️' };
+                RUNNER_2_PROFILE = { name: profile.runner2Name, nameShort: profile.runner2Name.split(' ')[0] || "Corredora", emoji: '🏃‍♀️' };
             }
 
             dom.headerSubtitle.textContent = `${RUNNER_1_PROFILE.name} & ${RUNNER_2_PROFILE.name}`;
@@ -968,13 +982,9 @@
             dom.runner2FormGroup.querySelector('h4').innerHTML = `${RUNNER_2_PROFILE.name} ${RUNNER_2_PROFILE.emoji}`;
         }
 
-        /**
-         * Renderiza o Dashboard (PRs e Estatísticas)
-         */
         function renderDashboard() {
             const racesArray = Object.values(db.races);
             const prs = { runner1: {}, runner2: {} };
-            // Distâncias Padrão para PRs
             const distances = [2, 5, 6, 7, 10, 12, 16, 17]; 
             
             let totalKmRunner1 = 0, totalKmRunner2 = 0, totalRacesJuntos = 0, completedRacesRunner1 = 0, completedRacesRunner2 = 0;
@@ -985,9 +995,8 @@
             });
 
             racesArray.forEach(race => {
-                // CORREÇÃO: Usa as chaves estáticas 'runner1' e 'runner2'
-                const runner1Data = race.runner1; 
-                const runner2Data = race.runner2;
+                const runner1Data = race[RUNNER_1_KEY]; 
+                const runner2Data = race[RUNNER_2_KEY];
                 
                 if(!runner1Data || !runner2Data) return; 
 
@@ -1035,9 +1044,6 @@
                 </div>`;
         }
 
-        /**
-         * Renderiza o Histórico de Corridas
-         */
         function renderHistory() {
             dom.historyContainer.innerHTML = '';
             const sortedRaces = Object.entries(db.races)
@@ -1073,14 +1079,10 @@
             }
         }
 
-        /**
-         * Cria o HTML para um único card de corrida
-         */
         function createRaceCard(race) {
             const card = document.createElement('div');
-            // CORREÇÃO: Usa as chaves estáticas 'runner1' e 'runner2'
-            const runner1Data = race.runner1;
-            const runner2Data = race.runner2;
+            const runner1Data = race[RUNNER_1_KEY];
+            const runner2Data = race[RUNNER_2_KEY];
             
             if (!runner1Data || !runner2Data) {
                 console.warn("Dados da corrida incompletos:", race);
@@ -1138,9 +1140,6 @@
             return card;
         }
 
-        /**
-         * Cria o HTML para a info de CADA corredor dentro do card
-         */
         function createRunnerInfoHTML(config, runnerData, distance, pace, cssClass) {
             let timeHTML = '', paceHTML = '';
             switch (runnerData.status) {
@@ -1159,7 +1158,6 @@
                 default: timeHTML = `<div class="runner-time skipped">N/A</div>`;
             }
 
-            // CORREÇÃO: usa 'runner1' e 'runner2' para as classes de cor
             if (runnerData.status === 'skipped') {
                 return `<div class="runner-info"><span class="runner-name ${cssClass}">${config.name} ${config.emoji}</span><div class="runner-details">${timeHTML}</div></div>`;
             }
@@ -1173,12 +1171,10 @@
             document.getElementById('race-id').value = '';
             dom.btnDelete.classList.add('hidden');
             
-            // Garante que os nomes no formulário são os do usuário logado
             dom.runner1FormGroup.querySelector('h4').innerHTML = `${RUNNER_1_PROFILE.name} ${RUNNER_1_PROFILE.emoji}`;
             dom.runner2FormGroup.querySelector('h4').innerHTML = `${RUNNER_2_PROFILE.name} ${RUNNER_2_PROFILE.emoji}`;
 
             if (raceId) {
-                // Modo Edição
                 dom.modalTitle.textContent = 'Editar Corrida';
                 dom.btnDelete.classList.remove('hidden');
                 const race = db.races[raceId];
@@ -1191,9 +1187,8 @@
                 document.getElementById('raceJuntos').checked = race.juntos;
                 document.getElementById('raceNotes').value = race.notes || '';
 
-                // CORREÇÃO: Usa as chaves estáticas 'runner1' e 'runner2'
-                const runner1Data = race.runner1;
-                const runner2Data = race.runner2;
+                const runner1Data = race[RUNNER_1_KEY];
+                const runner2Data = race[RUNNER_2_KEY];
 
                 document.getElementById('runner1Status').value = runner1Data.status || 'skipped';
                 const runner1Time = runner1Data.status === 'completed' ? runner1Data.time : (runner1Data.goalTime || runner1Data.time || '');
@@ -1205,7 +1200,6 @@
                 document.getElementById('runner2Time').value = normalizeTime(runner2Time) ? secondsToTime(timeToSeconds(runner2Time)) : '';
                 document.getElementById('runner2Distance').value = runner2Data.distance || '';
             } else {
-                // Modo Criação
                 dom.modalTitle.textContent = 'Adicionar Nova Corrida';
                 document.getElementById('raceDate').value = new Date().toISOString().split('T')[0];
             }
@@ -1236,7 +1230,6 @@
                 distance: parseFloat(document.getElementById('raceDistance').value) || null,
                 juntos: document.getElementById('raceJuntos').checked,
                 notes: document.getElementById('raceNotes').value || null,
-                // CORREÇÃO: Salva usando as chaves estáticas 'runner1' e 'runner2'
                 [RUNNER_1_KEY]: {
                     status: runner1Status,
                     time: runner1Status === 'completed' ? normalizeTime(runner1TimeRaw) : null,
@@ -1254,7 +1247,6 @@
             const dbPath = `/users/${currentViewingUid}/races/`;
 
             if (id) {
-                // Atualiza
                 firebase.database().ref(dbPath).child(id).set(raceData)
                     .then(closeModal)
                     .catch(err => {
@@ -1262,7 +1254,6 @@
                         alert("Erro ao salvar: " + err.message);
                     });
             } else {
-                // Cria
                 const newRaceRef = firebase.database().ref(dbPath).push();
                 newRaceRef.set(raceData)
                     .then(closeModal)
@@ -1290,43 +1281,27 @@
                 });
         }
 
-        /**
-         * Renderiza todos os componentes da UI
-         */
         function renderAll() {
-            updateProfileUI(); // Atualiza nomes no cabeçalho e formulário
+            updateProfileUI(); 
             renderDashboard();
             renderHistory();
         }
         
         // --- Funções de Carregamento de Dados (Firebase RTDB) ---
 
-        /**
-         * Carrega o perfil do UID especificado
-         */
         function loadProfile(uid) {
             const profileRef = firebase.database().ref(`/users/${uid}/profile`);
-            profileRef.on('value', (snapshot) => {
+            // 'once' é melhor aqui para evitar sobrepor dados se o listener de auth disparar de novo
+            profileRef.once('value', (snapshot) => {
                 const profileData = snapshot.val();
                 if (profileData) {
                     db.profile = profileData;
                     renderAll(); 
-                } else if (authUser && uid === authUser.uid) {
-                    // Perfil não existe, criar um padrão para o novo usuário
-                    const newProfile = {
-                        runner1Name: authUser.displayName ? authUser.displayName.split(' ')[0] : "Corredor 1",
-                        runner2Name: "Corredora 2",
-                        teamName: "Minha Equipe"
-                    };
-                    profileRef.set(newProfile);
-                    // O 'on' value listener será disparado novamente com os novos dados
                 }
+                // A lógica de criação de perfil foi movida para handleSignUp
             });
         }
         
-        /**
-         * Carrega as corridas do UID especificado
-         */
         function loadRaces(uid) {
             currentViewingUid = uid; 
             const racesRef = firebase.database().ref(`/users/${uid}/races`);
@@ -1341,15 +1316,12 @@
             });
         }
 
-        /**
-         * Carrega a visão pública (lista de perfis)
-         */
         function loadPublicView() {
             dom.loginOrPublicView.classList.remove('hidden');
-            dom.loginView.classList.add('hidden');
+            dom.loginView.classList.remove('hidden');
             dom.publicView.classList.remove('hidden');
             dom.userContent.classList.add('hidden'); 
-            dom.headerSubtitle.textContent = "Selecione um currículo para visualizar";
+            dom.headerSubtitle.textContent = "Selecione um currículo ou faça login";
             
             const publicProfilesRef = firebase.database().ref('/publicProfiles');
             publicProfilesRef.on('value', (snapshot) => {
@@ -1379,18 +1351,79 @@
         }
         
         // --- Funções de Autenticação (Firebase Auth) ---
+        
+        function showLoginError(message) {
+             dom.loginError.textContent = message;
+             dom.loginError.classList.remove('hidden');
+        }
 
+        /**
+         * NOVA FUNÇÃO: Lida com o cadastro de novos usuários
+         */
+        function handleSignUp(e) {
+            e.preventDefault();
+            const email = dom.loginEmail.value;
+            const password = dom.loginPassword.value;
+            dom.loginError.textContent = ''; // Limpa erros
+            
+            if (password.length < 6) {
+                showLoginError("A senha deve ter pelo menos 6 caracteres.");
+                return;
+            }
+            
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // Usuário criado e logado automaticamente
+                    const user = userCredential.user;
+                    const uid = user.uid;
+                    const defaultName = email.split('@')[0];
+
+                    // 1. Criar o perfil de usuário padrão
+                    const defaultProfile = {
+                        runner1Name: defaultName,
+                        runner2Name: "Corredor(a) 2",
+                        teamName: "Minha Equipe"
+                    };
+                    firebase.database().ref('/users/' + uid + '/profile').set(defaultProfile);
+
+                    // 2. Criar o perfil público padrão
+                    const defaultPublicProfile = {
+                        runner1Name: defaultName,
+                        runner2Name: "Corredor(a) 2",
+                        teamName: "Minha Equipe"
+                    };
+                    firebase.database().ref('/publicProfiles/' + uid).set(defaultPublicProfile);
+                    
+                    // O 'onAuthStateChanged' cuidará de atualizar a UI
+                    console.log("Novo usuário cadastrado:", uid);
+                })
+                .catch(err => {
+                    console.error("Erro no cadastro:", err.code, err.message);
+                    if (err.code === 'auth/email-already-in-use') {
+                        showLoginError("Este e-mail já está em uso. Tente fazer login.");
+                    } else {
+                        showLoginError("Erro ao cadastrar: " + err.message);
+                    }
+                });
+        }
+
+        /**
+         * Lida com o login de usuários existentes
+         */
         function handleSignIn(e) {
             e.preventDefault();
             const email = dom.loginEmail.value;
             const password = dom.loginPassword.value;
-            dom.loginError.classList.add('hidden');
+            dom.loginError.textContent = ''; // Limpa erros
 
             auth.signInWithEmailAndPassword(email, password)
                 .catch(err => {
                     console.error("Erro no login:", err.code, err.message);
-                    dom.loginError.textContent = "Erro: " + (err.code === 'auth/wrong-password' ? 'Senha incorreta.' : 'Usuário não encontrado.');
-                    dom.loginError.classList.remove('hidden');
+                    if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+                         showLoginError("E-mail ou senha incorretos.");
+                    } else {
+                         showLoginError("Erro ao entrar: " + err.message);
+                    }
                 });
         }
 
@@ -1424,8 +1457,9 @@
                 if(id) deleteRace(id);
             });
             
-            // Listeners de Autenticação
-            dom.loginForm.addEventListener('submit', handleSignIn);
+            // Listeners de Autenticação (CORRIGIDOS)
+            dom.btnLoginSubmit.addEventListener('click', handleSignIn);
+            dom.btnSignUpSubmit.addEventListener('click', handleSignUp);
             dom.btnLogout.addEventListener('click', signOut);
 
             // Gerenciador Central de Estado de Autenticação
@@ -1443,7 +1477,6 @@
                     dom.loginOrPublicView.classList.add('hidden');
                     dom.userContent.classList.remove('hidden');
 
-                    // Carrega o perfil e as corridas DO USUÁRIO LOGADO
                     loadProfile(user.uid);
                     loadRaces(user.uid);
 
@@ -1457,13 +1490,12 @@
                     dom.userInfo.classList.add('hidden');
                     dom.controlsSection.classList.add('hidden');
                     
-                    // Exibe a tela de Login E a tela de Perfis Públicos
                     dom.loginOrPublicView.classList.remove('hidden');
-                    dom.loginView.classList.remove('hidden');
-                    dom.userContent.classList.add('hidden'); // Esconde dashboard
+                    dom.userContent.classList.add('hidden'); 
+                    dom.loginError.textContent = ''; // Limpa erros de login
                     
                     db = { races: {}, profile: {} };
-                    loadPublicView(); // Carrega os perfis públicos abaixo do login
+                    loadPublicView(); 
                 }
             });
         });
