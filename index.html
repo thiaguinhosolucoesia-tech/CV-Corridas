@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Currículo Esportivo de Corredores</title>
     
+    <!-- SDKs do Firebase (OBRIGATÓRIO) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     
     <style>
-        /* ================================================= */
-        /* ESTILIZAÇÃO GERAL (DARK MODE)                     */
-        /* ================================================= */
+        /* Estilização Geral (Dark Mode) */
         * {
             margin: 0;
             padding: 0;
@@ -30,7 +29,7 @@
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            background: rgba(42, 42, 58, 0.85); /* Fundo "Glassmorphism" */
+            background: rgba(42, 42, 58, 0.85);
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
             overflow: hidden;
@@ -54,12 +53,10 @@
         .header p {
             font-size: 1.2em;
             opacity: 0.9;
-            min-height: 1.2em; /* Evita "pulo" no carregamento */
+            min-height: 1.2em;
         }
 
-        /* ================================================= */
-        /* AUTENTICAÇÃO UI                                   */
-        /* ================================================= */
+        /* UI de Autenticação e Seleção de Perfil */
         #auth-container {
             padding: 20px; 
             background: rgba(31, 32, 39, 0.7); 
@@ -67,7 +64,7 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        #login-form {
+        .form-container {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
@@ -75,7 +72,7 @@
             gap: 10px;
         }
         
-        #auth-container input {
+        #auth-container input, #auth-container select {
             padding: 10px 15px;
             border-radius: 8px;
             border: 1px solid #555;
@@ -83,7 +80,7 @@
             color: #f0f0f0;
             font-size: 0.9em;
         }
-        #auth-container input:focus {
+        #auth-container input:focus, #auth-container select:focus {
             outline: none;
             border-color: #667eea;
         }
@@ -98,473 +95,125 @@
             transition: all 0.3s ease;
         }
         
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        .btn-primary:hover {
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-        }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-primary:hover { box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3); }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-secondary:hover { background: #5a6268; }
         
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
+        #user-info { display: none; align-items: center; justify-content: center; gap: 20px; }
+        #user-email { font-size: 1.1em; color: #fff; }
+        #btn-logout { background: #dc3545; }
+        #public-profile-selector { display: none; }
+        #public-profile-selector label { margin-right: 10px; font-weight: 600; }
         
-        #user-info {
-            display: none; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 20px;
-        }
-        #user-email {
-            font-size: 1.1em; 
-            color: #fff;
-        }
-        #btn-logout {
-            background: #dc3545;
-        }
-
-        /* ================================================= */
-        /* DASHBOARD DE PERFORMANCE (STATS)                  */
-        /* ================================================= */
-        .dashboard-section {
-            padding: 30px;
-            background: rgba(20, 20, 30, 0.5);
-        }
-
-        .dashboard-header {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 1.8em;
-            color: #c5cae9;
-        }
-        
-        .dashboard-subheader {
-            text-align: center;
-            margin-bottom: 15px;
-            color: #aaa;
-            font-weight: 600;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: #2a2a3a;
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
-        }
-
-        .stat-number {
-            font-size: 2em;
-            font-weight: bold;
-            color: #c5cae9;
-            margin-bottom: 8px;
-            line-height: 1.2;
-        }
-
-        .stat-label {
-            color: #b0b0b0;
-            font-weight: 600;
-            font-size: 0.9em;
-        }
-
-        /* Card de Recordes Pessoais (PR) */
-        .pr-card .stat-number {
-            font-size: 1.4em;
-        }
-
-        .pr-card .runner-pr {
-            font-size: 0.9em;
-            color: #f0f0f0;
-            line-height: 1.5;
-        }
-        .pr-card .runner-pr-1 {
-            color: #4dabf5; /* Azul Corredor 1 */
-            font-weight: 600;
-        }
-        .pr-card .runner-pr-2 {
-            color: #f06292; /* Rosa Corredor 2 */
-            font-weight: 600;
-        }
-
-        /* ================================================= */
-        /* CONTROLES E HISTÓRICO                             */
-        /* ================================================= */
-        .controls-section {
-            padding: 20px 30px;
-            text-align: center;
-            background: #1a1a2e;
-        }
-
-        .btn-add {
-            padding: 15px 30px;
-            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-add:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
-        }
-        .btn-add:disabled {
-            background: #6c757d;
-            opacity: 0.5;
-            cursor: not-allowed;
-            box-shadow: none;
-            transform: none;
-        }
-
-        .history-section {
-            padding: 30px;
-            background: transparent;
-        }
-
-        .year-group {
-            margin-bottom: 30px;
-        }
-
-        .year-title {
-            font-size: 2em;
-            color: #c5cae9;
-            border-bottom: 3px solid #c5cae9;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-
-        .race-card-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 20px;
-        }
-
-        .race-card {
-            background: #2a2a3a;
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        
-        .race-card.status-planned {
-            background: #3a382a;
-            border: 2px dashed #ffc107;
-        }
-        
-        .race-card.status-skipped {
-            background: #3a2a2a;
-            opacity: 0.7;
-        }
-
-        .race-card-header {
-            padding: 20px;
-            border-bottom: 1px solid #444;
-        }
-
-        .race-card-header h3 {
-            font-size: 1.3em;
-            color: #ffffff;
-            margin-bottom: 5px;
-        }
-
-        .race-card-header .date {
-            font-size: 0.9em;
-            color: #b0b0b0;
-            font-weight: 600;
-        }
-
-        .race-card-body {
-            padding: 20px;
-            flex-grow: 1;
-        }
-
-        .runner-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 1px dashed #444;
-        }
-        .runner-info:last-child {
-            margin-bottom: 0;
-            padding-bottom: 0;
-            border-bottom: 0;
-        }
-
-        .runner-info .runner-name {
-            font-weight: bold;
-            font-size: 1.1em;
-        }
-        .runner-info .runner-name.runner1 { color: #4dabf5; }
-        .runner-info .runner-name.runner2 { color: #f06292; }
-
-        .runner-details {
-            text-align: right;
-        }
-
-        .runner-time {
-            font-size: 1.2em;
-            font-weight: 700;
-            color: #4caf50;
-        }
-        
-        .runner-time.goal {
-            color: #ffc107;
-            font-size: 1.1em;
-        }
-        
-        .runner-time.skipped {
-            color: #f44336;
-            font-size: 1.1em;
-            font-style: italic;
-        }
-
-        .runner-pace {
-            font-size: 0.9em;
-            color: #b0b0b0;
-            font-family: monospace;
-        }
-        
-        .runner-pace.goal {
-            color: #ffeb3b;
-        }
-
-        .race-card-footer {
-            padding: 10px 20px;
-            background: #222230;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .juntos-icon {
-            font-size: 1.5em;
-        }
-        
-        .race-notes {
-            font-size: 0.85em;
-            color: #b0b0b0;
-            font-style: italic;
-            margin-left: 10px;
-        }
-
-        .race-distance {
-            font-size: 1.1em;
-            font-weight: bold;
-            color: #c5cae9;
-            margin-right: 15px;
-        }
-        
-        .race-controls {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .race-controls.hidden {
+        /* Painel do Administrador */
+        #admin-panel {
             display: none;
+            padding: 20px;
+            background: rgba(126, 75, 162, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
-        .btn-control {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1em;
-            color: #b0b0b0;
-            opacity: 0.6;
-            transition: opacity 0.3s;
-        }
-        .btn-control:hover {
-            opacity: 1;
-        }
-
-        /* ================================================= */
-        /* MODAL E FORMULÁRIO (DARK)                         */
-        /* ================================================= */
-        dialog {
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            width: 90%;
-            max-width: 600px;
-            padding: 0;
-            overflow: hidden;
-            background: #2a2a3a;
-            color: #f0f0f0;
-        }
-
-        dialog::backdrop {
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(5px);
-        }
-
-        .modal-header {
-            padding: 20px 30px;
-            background: #1f2027;
-            border-bottom: 1px solid #444;
+        #admin-panel h2 { text-align: center; margin-bottom: 15px; color: #f06292; }
+        .pending-user {
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-        
-        .modal-header h2 {
-            color: #c5cae9;
-        }
-
-        .modal-body {
-            padding: 30px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .form-group.full-width {
-            grid-column: 1 / -1;
-        }
-
-        .form-group label {
-            font-weight: 600;
-            color: #b0b0b0;
-            font-size: 0.9em;
-            margin-bottom: 8px;
-        }
-
-        .form-group input,
-        .form-group select {
-            padding: 12px 15px;
-            border: 2px solid #555;
-            border-radius: 10px;
-            font-size: 1em;
-            transition: all 0.3s ease;
-            background: #333345;
-            color: #f0f0f0;
-        }
-        
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-        }
-        
-        .form-group.checkbox {
-            grid-column: 1 / -1;
-            flex-direction: row;
-            align-items: center;
-            gap: 10px;
-            font-size: 1.1em;
-        }
-        
-        .form-group.checkbox input {
-            width: 20px;
-            height: 20px;
-        }
-
-        .runner-form-group {
-            border: 2px solid #555;
-            border-radius: 10px;
-            padding: 15px;
-        }
-        
-        .runner-form-group h4 {
-            font-size: 1.2em;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-        .runner-form-group.runner1 h4 { color: #4dabf5; }
-        .runner-form-group.runner2 h4 { color: #f06292; }
-        
-        .runner-form-group .form-group {
+            background: #2a2a3a;
+            padding: 10px;
+            border-radius: 8px;
             margin-bottom: 10px;
         }
-        .runner-form-group .form-group:last-child {
-            margin-bottom: 0;
-        }
+        .pending-user .btn { padding: 5px 10px; font-size: 0.9em; }
 
-        .modal-footer {
-            padding: 20px 30px;
-            background: #1f2027;
-            border-top: 1px solid #444;
-            display: flex;
-            justify-content: flex-end;
-            gap: 15px;
-        }
+        /* Dashboard de Performance */
+        .dashboard-section { padding: 30px; background: rgba(20, 20, 30, 0.5); }
+        .dashboard-header { text-align: center; margin-bottom: 20px; font-size: 1.8em; color: #c5cae9; }
+        .dashboard-subheader { text-align: center; margin-bottom: 15px; color: #aaa; font-weight: 600; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .stat-card { background: #2a2a3a; padding: 20px; border-radius: 15px; text-align: center; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); transition: all 0.3s ease; border: 1px solid rgba(255, 255, 255, 0.05); }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3); }
+        .stat-number { font-size: 2em; font-weight: bold; color: #c5cae9; margin-bottom: 8px; line-height: 1.2; }
+        .stat-label { color: #b0b0b0; font-weight: 600; font-size: 0.9em; }
+        .pr-card .stat-number { font-size: 1.4em; }
+        .pr-card .runner-pr { font-size: 0.9em; color: #f0f0f0; line-height: 1.5; }
+        .pr-card .runner-pr-1 { color: #4dabf5; font-weight: 600; }
+        .pr-card .runner-pr-2 { color: #f06292; font-weight: 600; }
         
-        #btn-delete {
-            background: #dc3545;
-            color: white;
-            margin-right: auto;
-        }
-        #btn-delete:hover {
-            background: #c82333;
-        }
-        #btn-delete.hidden {
-            display: none;
-        }
-        
+        /* Controles e Histórico */
+        .controls-section { padding: 20px 30px; text-align: center; background: #1a1a2e; }
+        .btn-add { padding: 15px 30px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: white; border: none; border-radius: 10px; font-size: 1.1em; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+        .btn-add:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3); }
+        .btn-add:disabled { background: #6c757d; opacity: 0.5; cursor: not-allowed; box-shadow: none; transform: none; }
+
+        .history-section { padding: 30px; background: transparent; }
+        .year-group { margin-bottom: 30px; }
+        .year-title { font-size: 2em; color: #c5cae9; border-bottom: 3px solid #c5cae9; padding-bottom: 10px; margin-bottom: 20px; }
+        .race-card-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
+        .race-card { background: #2a2a3a; border-radius: 15px; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3); overflow: hidden; display: flex; flex-direction: column; border: 1px solid rgba(255, 255, 255, 0.05); }
+        .race-card.status-planned { background: #3a382a; border: 2px dashed #ffc107; }
+        .race-card.status-skipped { background: #3a2a2a; opacity: 0.7; }
+        .race-card-header { padding: 20px; border-bottom: 1px solid #444; }
+        .race-card-header h3 { font-size: 1.3em; color: #ffffff; margin-bottom: 5px; }
+        .race-card-header .date { font-size: 0.9em; color: #b0b0b0; font-weight: 600; }
+        .race-card-body { padding: 20px; flex-grow: 1; }
+        .runner-info { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed #444; }
+        .runner-info:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
+        .runner-info .runner-name { font-weight: bold; font-size: 1.1em; }
+        .runner-info .runner-name.runner1 { color: #4dabf5; }
+        .runner-info .runner-name.runner2 { color: #f06292; }
+        .runner-details { text-align: right; }
+        .runner-time { font-size: 1.2em; font-weight: 700; color: #4caf50; }
+        .runner-time.goal { color: #ffc107; font-size: 1.1em; }
+        .runner-time.skipped { color: #f44336; font-size: 1.1em; font-style: italic; }
+        .runner-pace { font-size: 0.9em; color: #b0b0b0; font-family: monospace; }
+        .runner-pace.goal { color: #ffeb3b; }
+        .race-card-footer { padding: 10px 20px; background: #222230; display: flex; justify-content: space-between; align-items: center; }
+        .juntos-icon { font-size: 1.5em; }
+        .race-notes { font-size: 0.85em; color: #b0b0b0; font-style: italic; margin-left: 10px; }
+        .race-distance { font-size: 1.1em; font-weight: bold; color: #c5cae9; margin-right: 15px; }
+        .race-controls { display: flex; gap: 10px; }
+        .race-controls.hidden { display: none; }
+        .btn-control { background: none; border: none; cursor: pointer; font-size: 1em; color: #b0b0b0; opacity: 0.6; transition: opacity 0.3s; }
+        .btn-control:hover { opacity: 1; }
+
+        /* Modal e Formulário */
+        dialog { border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); width: 90%; max-width: 600px; padding: 0; overflow: hidden; background: #2a2a3a; color: #f0f0f0; }
+        dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); }
+        .modal-header { padding: 20px 30px; background: #1f2027; border-bottom: 1px solid #444; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { color: #c5cae9; }
+        .modal-body { padding: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        .form-group label { font-weight: 600; color: #b0b0b0; font-size: 0.9em; margin-bottom: 8px; }
+        .form-group input, .form-group select { padding: 12px 15px; border: 2px solid #555; border-radius: 10px; font-size: 1em; transition: all 0.3s ease; background: #333345; color: #f0f0f0; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2); }
+        .form-group.checkbox { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 10px; font-size: 1.1em; }
+        .form-group.checkbox input { width: 20px; height: 20px; }
+        .runner-form-group { border: 2px solid #555; border-radius: 10px; padding: 15px; }
+        .runner-form-group h4 { font-size: 1.2em; margin-bottom: 15px; text-align: center; }
+        .runner-form-group.runner1 h4 { color: #4dabf5; }
+        .runner-form-group.runner2 h4 { color: #f06292; }
+        .modal-footer { padding: 20px 30px; background: #1f2027; border-top: 1px solid #444; display: flex; justify-content: flex-end; gap: 15px; }
+        #btn-delete { background: #dc3545; color: white; margin-right: auto; }
+        #btn-delete:hover { background: #c82333; }
+        #btn-delete.hidden { display: none; }
+        .footer { background: #343a40; color: white; text-align: center; padding: 20px; font-size: 0.9em; }
+
         /* Loading/Empty State */
-        #loading-state {
-            text-align: center;
-            padding: 50px;
-            font-size: 1.2em;
-            color: #b0b0b0;
-        }
-        #loading-state.hidden {
-            display: none;
-        }
+        #loading-state { text-align: center; padding: 50px; font-size: 1.2em; color: #b0b0b0; }
+        #loading-state.hidden { display: none; }
 
         /* Responsividade */
         @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
+            body { padding: 10px; }
             .header h1 { font-size: 2em; }
-            #login-form { flex-direction: column; gap: 15px; }
-            #login-form input { width: 100%; }
-            #login-form .btn { width: 100%; }
-            
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-            .race-card-list {
-                grid-template-columns: 1fr;
-            }
-            .modal-body {
-                grid-template-columns: 1fr;
-            }
-            .form-group.checkbox {
-                font-size: 1em;
-            }
+            .form-container { flex-direction: column; gap: 15px; }
+            .form-container input, .form-container select { width: 100%; }
+            .form-container .btn { width: 100%; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .race-card-list { grid-template-columns: 1fr; }
+            .modal-body { grid-template-columns: 1fr; }
+            .form-group.checkbox { font-size: 1em; }
         }
     </style>
 </head>
@@ -576,42 +225,48 @@
             <p id="header-subtitle">Carregando perfil...</p>
         </div>
         
+        <!-- UI de Autenticação e Seleção de Perfil -->
         <div id="auth-container">
-            <form id="login-form">
-                <input type
-="email" id="login-email" placeholder="E-mail" required>
+            <div id="public-profile-selector" class="form-container">
+                <label for="profile-select">Visualizar Perfil Público:</label>
+                <select id="profile-select" class="btn-secondary"></select>
+            </div>
+            <form id="login-form" class="form-container">
+                <input type="email" id="login-email" placeholder="E-mail" required>
                 <input type="password" id="login-pass" placeholder="Senha" required>
                 <button type="submit" class="btn btn-primary">Login</button>
                 <button type="button" id="btn-signup" class="btn btn-secondary">Cadastrar</button>
             </form>
-            
-            <div id="user-info">
+            <div id="user-info" class="form-container">
                 <span id="user-email"></span>
                 <button type="button" id="btn-logout" class="btn">Logout</button>
             </div>
         </div>
 
-        <div class="dashboard-section">
-            <h2 class="dashboard-header">Dashboard de Performance</h2>
-            
-            <h3 class="dashboard-subheader">Recordes Pessoais (PRs)</h3>
-            <div class="stats-grid" id="pr-grid">
-                </div>
-            
-            <h3 class="dashboard-subheader" style="margin-top: 30px;">Estatísticas Gerais</h3>
-            <div class="stats-grid" id="summary-grid">
-                </div>
+        <!-- Painel do Administrador -->
+        <div id="admin-panel">
+            <h2>⚙️ Painel de Administração - Aprovações Pendentes</h2>
+            <div id="pending-users-list"></div>
         </div>
 
+        <!-- Dashboard de Performance -->
+        <div class="dashboard-section">
+            <h2 class="dashboard-header">Dashboard de Performance</h2>
+            <h3 class="dashboard-subheader">Recordes Pessoais (PRs)</h3>
+            <div class="stats-grid" id="pr-grid"></div>
+            <h3 class="dashboard-subheader" style="margin-top: 30px;">Estatísticas Gerais</h3>
+            <div class="stats-grid" id="summary-grid"></div>
+        </div>
+
+        <!-- Controles -->
         <div class="controls-section">
             <button class="btn-add" id="btn-add-new" disabled>Carregando...</button>
         </div>
 
+        <!-- Histórico de Corridas -->
         <div class="history-section">
             <div id="history-container">
-                <div id="loading-state">
-                    Carregando histórico de corridas...
-                </div>
+                <div id="loading-state">Carregando histórico de corridas...</div>
             </div>
         </div>
 
@@ -620,6 +275,7 @@
         </div>
     </div>
 
+    <!-- Modal do Formulário -->
     <dialog id="race-modal">
         <form id="race-form">
             <input type="hidden" id="race-id">
@@ -629,7 +285,7 @@
             </div>
             
             <div class="modal-body">
-                <div class="form-group full-width">
+                 <div class="form-group full-width">
                     <label for="raceName">Nome da Corrida</label>
                     <input type="text" id="raceName" required>
                 </div>
@@ -657,7 +313,7 @@
                         <input type="text" id="runner1Time" placeholder="00:29:10">
                     </div>
                     <div class="form-group">
-                        <label for="runner1Distance">Distância (se diferente da prova)</label>
+                        <label for="runner1Distance">Distância (se diferente)</label>
                         <input type="number" step="0.1" id="runner1Distance" placeholder="Ex: 10">
                     </div>
                 </div>
@@ -677,7 +333,7 @@
                         <input type="text" id="runner2Time" placeholder="00:40:36">
                     </div>
                     <div class="form-group">
-                        <label for="runner2Distance">Distância (se diferente da prova)</label>
+                        <label for="runner2Distance">Distância (se diferente)</label>
                         <input type="number" step="0.1" id="runner2Distance" placeholder="Ex: 5">
                     </div>
                 </div>
@@ -704,250 +360,329 @@
 
     <script>
         // =================================================================
-        // 2. CONFIGURAÇÃO DO FIREBASE
+        // CONFIGURAÇÃO DO FIREBASE (Valores Reais)
         // =================================================================
         
-        // // COLE AQUI O OBJETO firebaseConfig QUE VOCÊ COPIOU DO SEU CONSOLE
         const firebaseConfig = {
-    apiKey: "AIzaSyD4f2an3vC3v17VOwjo23C2PfCwl-PxPc8",
-    authDomain: "curriculo-corridas.firebaseapp.com",
-    databaseURL: "https://curriculo-corridas-default-rtdb.firebaseio.com",
-    projectId: "curriculo-corridas",
-    storageBucket: "curriculo-corridas.firebasestorage.app",
-    messagingSenderId: "623733303687",
-    appId: "1:623733303687:web:68f6c446eebbfec2590b22"
-  };
-        // // // APÓS CADASTRAR SUA CONTA, PEGUE SEU UID NO FIREBASE AUTHENTICATION
-        // E COLE AQUI PARA DEFINIR SEU PERFIL COMO A PÁGINA PÚBLICA PADRÃO.
-        const PUBLIC_PROFILE_UID_TO_VIEW = "6awggCOZt3P8ARkRytKFuc8v6yz1"; 
-        // // Inicializa o Firebase
+            apiKey: "AIzaSyD4f2an3vC3v17VOwjo23C2PfCwl-PxPc8",
+            authDomain: "curriculo-corridas.firebaseapp.com",
+            databaseURL: "https://curriculo-corridas-default-rtdb.firebaseio.com",
+            projectId: "curriculo-corridas",
+            storageBucket: "curriculo-corridas.appspot.com",
+            messagingSenderId: "623733303687",
+            appId: "1:623733303687:web:68f6c446eebbfec2590b22"
+        };
+        
+        // UID do Administrador (tt@ts.com)
+        const ADMIN_UID = "6awggCOZt3P8ARkRytKFuc8v6yz1";
+        const PUBLIC_PROFILE_UID_TO_VIEW = ADMIN_UID; // Perfil padrão para visitantes é o do admin
+
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
-        const db = firebase.database(); // Referência ao Realtime Database
-
+        const db = firebase.database();
+        
         // =================================================================
         // ESTADO GLOBAL DA APLICAÇÃO
         // =================================================================
-        let localRaces = []; // Cache local das corridas do usuário
-        let currentUser = null; // Objeto do usuário logado
-        let viewingUserID = null; // UID do perfil que está sendo visualizado
-        let currentProfile = { // Perfil padrão antes de carregar
-            runner1_name: "Corredor 1",
-            runner1_nameShort: "C1",
-            runner1_emoji: "🏃‍♂️",
-            runner2_name: "Corredor 2",
-            runner2_nameShort: "C2",
-            runner2_emoji: "🏃‍♀️"
-        };
-        let profileRef = null; // Referência do listener do perfil
-        let racesRef = null;   // Referência do listener das corridas
+        let localRaces = []; 
+        let currentUser = null; 
+        let viewingUserID = null; 
+        let currentProfile = {};
+        let profileRef = null;
+        let racesRef = null;
+        let pendingUsersRef = null;
 
         // =================================================================
-        // DADOS INICIAIS PARA NOVOS USUÁRIOS
-        // (A estrutura foi alterada para runner1 e runner2)
+        // DADOS INICIAIS PARA NOVOS USUÁRIOS (HISTÓRICO COMPLETO)
         // =================================================================
         const initialRaceData = [
-            {
-                id: '2023-08-20', date: '2023-08-20', year: '2023', raceName: 'Corrida FreshRun - Muffato RP', distance: 5,
+             {
+                id: '20230820', date: '2023-08-20', year: '2023', raceName: 'Corrida FreshRun - Muffato RP', distance: 5,
                 runner1: { status: 'completed', time: '00:29:10' },
                 runner2: { status: 'completed', time: '00:40:36' },
-                juntos: false, notes: "Nossa primeira corrida!"
+                juntos: false, notes: ""
             },
             {
-                id: '2024-03-24', date: '2024-03-24', year: '2024', raceName: 'Corrida Instituto Unimed RP', distance: 5,
+                id: '20240324', date: '2024-03-24', year: '2024', raceName: 'Corrida Instituto Unimed RP', distance: 5,
                 runner1: { status: 'completed', time: '00:26:11' },
                 runner2: { status: 'completed', time: '00:37:42' },
-                juntos: false, notes: null
+                juntos: false, notes: ""
             },
             {
-                id: '2024-06-02', date: '2024-06-02', year: '2024', raceName: 'Circuito Sesc de Corridas RP', distance: 5,
+                id: '20240519', date: '2024-05-19', year: '2024', raceName: 'Corrida Maio Amarelo RP', distance: null,
+                runner1: { status: 'completed', time: '00:42:35', distance: 7 },
+                runner2: { status: 'skipped' },
+                juntos: false, notes: 'Runner1 correu 7k'
+            },
+            {
+                id: '20240602', date: '2024-06-02', year: '2024', raceName: 'Circuito Sesc de Corridas RP', distance: 5,
                 runner1: { status: 'completed', time: '00:39:02' },
                 runner2: { status: 'completed', time: '00:39:02' },
-                juntos: true, notes: null
+                juntos: true, notes: ""
             },
             {
-                id: '2025-09-14', date: '2025-09-14', year: '2025', raceName: '6ª Corrida 17° BPM/I RP', distance: null,
-                runner1: { status: 'completed', time: '01:29:55', distance: 17 }, 
-                runner2: { status: 'planned', distance: 5 }, 
+                id: '20240818', date: '2024-08-18', year: '2024', raceName: 'Corrida Muffato RP', distance: null,
+                runner1: { status: 'completed', time: '00:55:59', distance: 10 },
+                runner2: { status: 'completed', time: '00:39:05', distance: 5 },
+                juntos: false, notes: 'Runner1 10k, Runner2 5k'
+            },
+            {
+                id: '20240825', date: '2024-08-25', year: '2024', raceName: 'Circuito Mais Mulher SP / RP', distance: 5,
+                runner1: { status: 'skipped' },
+                runner2: { status: 'completed', time: '00:39:45' },
+                juntos: false, notes: ""
+            },
+            {
+                id: '20240929', date: '2024-09-29', year: '2024', raceName: 'Desafio Extremo Sesc RP', distance: 2,
+                runner1: { status: 'completed', time: null },
+                runner2: { status: 'skipped' },
+                juntos: false, notes: 'Runner1 2k (sem tempo)'
+            },
+            {
+                id: '20241110', date: '2024-11-10', year: '2024', raceName: '5ª Corrida 17° BPM/I RP', distance: null,
+                runner1: { status: 'completed', time: '00:55:57', distance: 10 },
+                runner2: { status: 'skipped' },
+                juntos: false, notes: 'Runner1 10k'
+            },
+            {
+                id: '20241125', date: '2024-11-25', year: '2024', raceName: 'Circuito Corrida de Rua Santander RP', distance: 5,
+                runner1: { status: 'completed', time: '00:27:10' },
+                runner2: { status: 'completed', time: '00:39:13' },
+                juntos: false, notes: ""
+            },
+            {
+                id: '20241201', date: '2024-12-01', year: '2024', raceName: 'ROCK AND RUN RP', distance: 5,
+                runner1: { status: 'completed', time: '00:40:05' },
+                runner2: { status: 'completed', time: '00:40:05' },
+                juntos: true, notes: ""
+            },
+            {
+                id: '20250202', date: '2025-02-02', year: '2025', raceName: 'Corrida Circuito Marilson RP', distance: 5,
+                runner1: { status: 'completed', time: '00:26:02' },
+                runner2: { status: 'completed', time: '00:36:36' },
+                juntos: false, notes: ""
+            },
+            {
+                id: '20250331', date: '2025-03-31', year: '2025', raceName: 'Corrida da Polícia Federal RP', distance: 5,
+                runner1: { status: 'completed', time: '00:38:30' },
+                runner2: { status: 'completed', time: '00:37:49' },
+                juntos: false, notes: 'Runner1 ♿ Pernas Solidárias'
+            },
+            {
+                id: '20250413', date: '2025-04-13', year: '2025', raceName: 'Treino Solidário AMICC RP', distance: 5,
+                runner1: { status: 'completed', time: '00:38:05' },
+                runner2: { status: 'completed', time: '00:38:05' },
+                juntos: true, notes: ""
+            },
+            {
+                id: '20250501', date: '2025-05-01', year: '2025', raceName: '46ª Corrida Pedestre do Trabalhador Olímpia - SP', distance: null,
+                runner1: { status: 'completed', time: '00:39:42', distance: 7 },
+                runner2: { status: 'skipped' },
+                juntos: false, notes: 'Runner1 7k'
+            },
+            {
+                id: '20250517', date: '2025-05-17', year: '2025', raceName: 'Corrida Maio Amarelo RP', distance: 5,
+                runner1: { status: 'completed', time: '00:27:05' },
+                runner2: { status: 'completed', time: '00:38:35' },
+                juntos: false, notes: ""
+            },
+            {
+                id: '20250525', date: '2025-05-25', year: '2025', raceName: 'Corrrida Track Field/Santander RP', distance: null,
+                runner1: { status: 'completed', time: '00:54:30', distance: 10 },
+                runner2: { status: 'completed', time: '00:37:53', distance: 5 },
+                juntos: false, notes: 'Runner1 10k, Runner2 5k'
+            },
+            {
+                id: '20250601', date: '2025-06-01', year: '2025', raceName: 'Circuito Sesc de Corridas RP', distance: 5,
+                runner1: { status: 'completed', time: '00:36:06' },
+                runner2: { status: 'completed', time: '00:36:06' },
+                juntos: true, notes: ""
+            },
+            {
+                id: '20250727', date: '2025-07-27', year: '2025', raceName: 'Corrida Circuito Sesc - Catanduva', distance: 6,
+                runner1: { status: 'completed', time: '00:49:22' },
+                runner2: { status: 'completed', time: '00:49:22' },
+                juntos: true, notes: ""
+            },
+            {
+                id: '20250803', date: '2025-08-03', year: '2025', raceName: 'FreshRun - corrida Muffato', distance: null,
+                runner1: { status: 'completed', time: '01:07:00', distance: 12 },
+                runner2: { status: 'completed', time: '00:46:31', distance: 6 },
+                juntos: false, notes: 'Runner1 12k, Runner2 6k'
+            },
+            {
+                id: '20250907', date: '2025-09-07', year: '2025', raceName: 'Corrida da Independência - Uchôa', distance: 5,
+                runner1: { status: 'planned' },
+                runner2: { status: 'planned' },
+                juntos: false, notes: ""
+            },
+            {
+                id: '20250914', date: '2025-09-14', year: '2025', raceName: '6ª Corrida 17° BPM/I RP', distance: null,
+                runner1: { status: 'completed', time: '01:29:55', distance: 17 },
+                runner2: { status: 'planned', distance: 5 },
                 juntos: false, notes: 'Runner1 17k, Runner2 5k (planejado)'
+            },
+            {
+                id: '20251019', date: '2025-10-19', year: '2025', raceName: 'Corrida Sin Comerciários', distance: 5,
+                runner1: { status: 'completed', time: '00:25:00' },
+                runner2: { status: 'planned' },
+                juntos: false, notes: 'Meta Runner1: 25:00 ✅'
+            },
+            {
+                id: '20251130', date: '2025-11-30', year: '2025', raceName: 'Corrida Instituto Unimed - Rio Preto', distance: null,
+                runner1: { status: 'planned', distance: 16 },
+                runner2: { status: 'planned', distance: 5 },
+                juntos: false, notes: 'Runner1 16k, Runner2 5k'
             }
         ];
         
-        // =================================================================
-        // FUNÇÕES UTILITÁRIAS DE TEMPO/PACE
-        // =================================================================
-
-        function timeToSeconds(timeStr) {
-            if (!timeStr || typeof timeStr !== 'string') return null;
-            const parts = timeStr.split(':').map(Number).filter(n => !isNaN(n));
-            let seconds = 0;
-            if (parts.length === 2) { seconds = parts[0] * 60 + parts[1]; }
-            else if (parts.length === 3) { seconds = parts[0] * 3600 + parts[1] * 60 + parts[2]; }
-            else { return null; }
-            return seconds;
-        }
-        
-        function secondsToTime(totalSeconds) {
-            if (totalSeconds === null || isNaN(totalSeconds) || totalSeconds === Infinity) return 'N/A';
-            totalSeconds = Math.round(totalSeconds);
-            const hours = Math.floor(totalSeconds / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
-            const seconds = totalSeconds % 60;
-            const pad = (num) => String(num).padStart(2, '0');
-            if (hours > 0) { return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`; }
-            else { return `${pad(minutes)}:${pad(seconds)}`; }
-        }
-
-         function normalizeTime(timeStr) {
-            if (!timeStr) return null;
-            const cleanTime = timeStr.replace(/[^0-9:]/g, '');
-            const parts = cleanTime.split(':');
-            if (parts.length === 2) { return `00:${String(parts[0]).padStart(2, '0')}:${String(parts[1]).padStart(2, '0')}`; }
-            else if (parts.length === 3) { return `${String(parts[0]).padStart(2, '0')}:${String(parts[1]).padStart(2, '0')}:${String(parts[2]).padStart(2, '0')}`; }
-            return null;
-         }
-
-        function calculatePace(timeStr, distance) {
-            const seconds = timeToSeconds(timeStr);
-            const dist = parseFloat(distance);
-            if (!seconds || !dist || dist <= 0) return 'N/A';
-            const paceInSeconds = seconds / dist;
-            const paceMinutes = Math.floor(paceInSeconds / 60);
-            const paceSeconds = Math.round(paceInSeconds % 60);
-            return `${String(paceMinutes).padStart(2, '0')}:${String(paceSeconds).padStart(2, '0')} /km`;
-        }
+        // Funções Utilitárias... (sem alterações)
+        function timeToSeconds(timeStr) { if (!timeStr || typeof timeStr !== 'string') return null; const parts = timeStr.split(':').map(Number).filter(n => !isNaN(n)); let seconds = 0; if (parts.length === 2) { seconds = parts[0] * 60 + parts[1]; } else if (parts.length === 3) { seconds = parts[0] * 3600 + parts[1] * 60 + parts[2]; } else { return null; } return seconds; }
+        function secondsToTime(totalSeconds) { if (totalSeconds === null || isNaN(totalSeconds) || totalSeconds === Infinity) return 'N/A'; totalSeconds = Math.round(totalSeconds); const hours = Math.floor(totalSeconds / 3600); const minutes = Math.floor((totalSeconds % 3600) / 60); const seconds = totalSeconds % 60; const pad = (num) => String(num).padStart(2, '0'); if (hours > 0) { return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`; } else { return `${pad(minutes)}:${pad(seconds)}`; } }
+        function normalizeTime(timeStr) { if (!timeStr) return null; const cleanTime = timeStr.replace(/[^0-9:]/g, ''); const parts = cleanTime.split(':'); if (parts.length === 2) { return `00:${String(parts[0]).padStart(2, '0')}:${String(parts[1]).padStart(2, '0')}`; } else if (parts.length === 3) { return `${String(parts[0]).padStart(2, '0')}:${String(parts[1]).padStart(2, '0')}:${String(parts[2]).padStart(2, '0')}`; } return null; }
+        function calculatePace(timeStr, distance) { const seconds = timeToSeconds(timeStr); const dist = parseFloat(distance); if (!seconds || !dist || dist <= 0) return 'N/A'; const paceInSeconds = seconds / dist; const paceMinutes = Math.floor(paceInSeconds / 60); const paceSeconds = Math.round(paceInSeconds % 60); return `${String(paceMinutes).padStart(2, '0')}:${String(paceSeconds).padStart(2, '0')} /km`; }
 
         // =================================================================
         // LÓGICA DE AUTENTICAÇÃO E DADOS (FIREBASE)
         // =================================================================
         
-        auth.onAuthStateChanged(user => {
-            // Limpa listeners antigos para evitar duplicação
+        function setupUIForAuthState(user) {
+            // Limpa listeners antigos para evitar duplicação de dados
             if (profileRef) profileRef.off();
             if (racesRef) racesRef.off();
+            if (pendingUsersRef) pendingUsersRef.off();
 
             const btnAdd = document.getElementById('btn-add-new');
+            const adminPanel = document.getElementById('admin-panel');
+            const publicSelector = document.getElementById('public-profile-selector');
+            const loginForm = document.getElementById('login-form');
+            const userInfo = document.getElementById('user-info');
+            
+            adminPanel.style.display = 'none'; // Esconde painel admin por padrão
 
             if (user) {
                 // --- USUÁRIO LOGADO ---
                 currentUser = user;
-                viewingUserID = user.uid; // Usuário logado vê o próprio perfil
+                viewingUserID = user.uid;
                 
-                document.getElementById('user-info').style.display = 'flex';
-                document.getElementById('login-form').style.display = 'none';
-                document.getElementById('user-email').textContent = `Logado como: ${user.email}`;
+                userInfo.style.display = 'flex';
+                loginForm.style.display = 'none';
+                publicSelector.style.display = 'none';
+                document.getElementById('user-email').textContent = `${user.email}`;
                 btnAdd.disabled = false;
                 btnAdd.textContent = '➕ Adicionar Nova Corrida';
 
-                loadUserProfile(user.uid);
+                if (user.uid === ADMIN_UID) {
+                    adminPanel.style.display = 'block';
+                    loadPendingUsers();
+                }
                 
+                loadUserProfile(user.uid);
             } else {
                 // --- USUÁRIO DESLOGADO (VISITANTE) ---
                 currentUser = null;
-                viewingUserID = PUBLIC_PROFILE_UID_TO_VIEW; // Vê o perfil público padrão
                 
-                document.getElementById('user-info').style.display = 'none';
-                document.getElementById('login-form').style.display = 'flex';
+                userInfo.style.display = 'none';
+                loginForm.style.display = 'flex';
+                publicSelector.style.display = 'block';
                 btnAdd.disabled = true;
                 btnAdd.textContent = 'Faça login para adicionar corridas';
 
-                if (!viewingUserID || viewingUserID === "COLE_SEU_UID_AQUI") {
-                    document.getElementById('history-container').innerHTML = `<div id="loading-state">Este site ainda não foi configurado. Nenhum perfil público foi definido.</div>`;
-                    document.getElementById('header-subtitle').textContent = "Plataforma de Corredores";
-                } else {
-                    loadUserProfile(viewingUserID);
-                }
+                loadApprovedUsersAndSetInitialView();
             }
-            renderAll(); // Renderiza (com botões de edição ocultos se for visitante)
-        });
+        }
 
+        function loadApprovedUsersAndSetInitialView() {
+            const approvedUsersRef = db.ref('approved_users');
+            approvedUsersRef.once('value', (snapshot) => {
+                const users = snapshot.val();
+                const select = document.getElementById('profile-select');
+                select.innerHTML = '<option value="">Selecione um perfil...</option>';
+                if (users) {
+                    Object.keys(users).forEach(uid => {
+                        const option = document.createElement('option');
+                        option.value = uid;
+                        option.textContent = `${users[uid].runner1_name} & ${users[uid].runner2_name}`;
+                        if (uid === PUBLIC_PROFILE_UID_TO_VIEW) {
+                            option.selected = true;
+                        }
+                        select.appendChild(option);
+                    });
+                }
+                viewingUserID = select.value || null;
+                if (viewingUserID) {
+                    loadUserProfile(viewingUserID);
+                } else {
+                    document.getElementById('history-container').innerHTML = `<div id="loading-state">Nenhum perfil público disponível.</div>`;
+                }
+            });
+        }
+        
         function loadUserProfile(uid) {
             profileRef = db.ref(`users/${uid}/profile`);
             racesRef = db.ref(`users/${uid}/races`);
-
-            // 1. Ouve o perfil
+            
             profileRef.on('value', (snapshot) => {
                 const profileData = snapshot.val();
-                if (profileData) {
-                    currentProfile = {
-                        runner1_name: profileData.runner1_name || 'Corredor 1',
-                        runner1_nameShort: profileData.runner1_nameShort || (profileData.runner1_name ? profileData.runner1_name.split(' ')[0] : 'C1'),
-                        runner1_emoji: "🏃‍♂️", // Pode ser adicionado ao perfil
-                        runner2_name: profileData.runner2_name || 'Corredor 2',
-                        runner2_nameShort: profileData.runner2_nameShort || (profileData.runner2_name ? profileData.runner2_name.split(' ')[0] : 'C2'),
-                        runner2_emoji: "🏃‍♀️",
-                        team_name: profileData.team_name || 'Equipe'
-                    };
-                } else {
-                    // Perfil não existe (pode ser usuário novo)
-                    if (currentUser && currentUser.uid === uid) {
-                        // É um usuário novo, cria o perfil padrão
-                        const defaultProfile = {
-                            runner1_name: "Thiago V. Valencio", // Padrão
-                            runner2_name: "Thamis E. P. Valencio", // Padrão
-                            team_name: "thIAguinho Soluções",
-                            email: currentUser.email
-                        };
-                        profileRef.set(defaultProfile); // Salva o perfil
-                        currentProfile = { ...currentProfile, ...defaultProfile };
-                    }
+                if(profileData) {
+                    currentProfile.runner1_name = profileData.runner1_name || 'Corredor 1';
+                    currentProfile.runner1_nameShort = profileData.runner1_name ? profileData.runner1_name.split(' ')[0] : 'C1';
+                    currentProfile.runner1_emoji = "🏃‍♂️";
+                    currentProfile.runner2_name = profileData.runner2_name || 'Corredor 2';
+                    currentProfile.runner2_nameShort = profileData.runner2_name ? profileData.runner2_name.split(' ')[0] : 'C2';
+                    currentProfile.runner2_emoji = "🏃‍♀️";
+                    currentProfile.team_name = profileData.team_name || 'Equipe';
                 }
                 updateHeaderAndFormNames();
-                renderAll(); // Re-renderiza com os nomes corretos
+                renderAll();
             });
-            
-            // 2. Ouve as corridas
+
             racesRef.on('value', (snapshot) => {
                 const data = snapshot.val();
-                if (data) {
-                    localRaces = Object.keys(data).map(key => ({
-                        id: key,
-                        ...data[key]
-                    })).sort((a, b) => new Date(b.date) - new Date(a.date)); // Garante ordenação
-                } else {
-                    // Sem corridas. Se for o dono do perfil, popula com dados iniciais.
-                    if (currentUser && currentUser.uid === uid) {
-                        populateNewUser(uid);
-                    } else {
-                        localRaces = []; // Visitante vendo perfil vazio
-                    }
-                }
+                localRaces = data ? Object.keys(data).map(key => ({ id: key, ...data[key] })).sort((a, b) => new Date(b.date) - new Date(a.date)) : [];
                 renderAll();
             });
         }
-        
-        function populateNewUser(uid) {
-            // Converte o array inicial em um objeto (formato Firebase)
-            const racesAsObject = initialRaceData.reduce((acc, race) => {
-                // Usa um ID único do Firebase em vez do ID estático
-                const newKey = db.ref().push().key; 
-                acc[newKey] = { ...race, id: newKey }; // Salva com o ID dentro do objeto
-                return acc;
-            }, {});
-            
-            // Salva os dados de perfil E os dados de corrida iniciais
-            db.ref(`users/${uid}/races`).set(racesAsObject);
-            // O listener 'onValue' vai pegar essa mudança e atualizar 'localRaces'
+
+        function loadPendingUsers() {
+            pendingUsersRef = db.ref('pending_users');
+            pendingUsersRef.on('value', snapshot => {
+                const list = document.getElementById('pending-users-list');
+                list.innerHTML = '';
+                const users = snapshot.val();
+                if (!users) {
+                    list.innerHTML = '<p style="text-align: center; color: #aaa;">Nenhum cadastro pendente.</p>';
+                    return;
+                }
+                Object.keys(users).forEach(uid => {
+                    const user = users[uid];
+                    const userDiv = document.createElement('div');
+                    userDiv.className = 'pending-user';
+                    userDiv.innerHTML = `
+                        <span>${user.email} (${user.runner1_name} & ${user.runner2_name})</span>
+                        <div>
+                            <button class="btn btn-primary approve-btn" data-uid="${uid}">Aprovar</button>
+                            <button class="btn btn-secondary reject-btn" data-uid="${uid}" style="background:#dc3545;">Rejeitar</button>
+                        </div>
+                    `;
+                    list.appendChild(userDiv);
+                });
+
+                document.querySelectorAll('.approve-btn').forEach(btn => btn.addEventListener('click', (e) => approveUser(e.target.dataset.uid)));
+                document.querySelectorAll('.reject-btn').forEach(btn => btn.addEventListener('click', (e) => rejectUser(e.target.dataset.uid)));
+            });
         }
         
-        function updateHeaderAndFormNames() {
-            document.getElementById('header-subtitle').textContent = `${currentProfile.runner1_name} & ${currentProfile.runner2_name}`;
-            document.getElementById('runner1-form-name').innerHTML = `${currentProfile.runner1_name} ${currentProfile.runner1_emoji}`;
-            document.getElementById('runner2-form-name').innerHTML = `${currentProfile.runner2_name} ${currentProfile.runner2_emoji}`;
-        }
+        // ... (resto do JS, incluindo renderDashboard, renderHistory, etc.)
         
         // =================================================================
-        // LÓGICA DE RENDERIZAÇÃO (UI)
+        // LÓGICA DE RENDERIZAÇÃO (UI) - SEM ALTERAÇÕES SIGNIFICATIVAS
         // =================================================================
         
         function renderDashboard() {
             const prGrid = document.getElementById('pr-grid');
             const summaryGrid = document.getElementById('summary-grid');
-            
-            const prs = {
-                runner1: {},
-                runner2: {}
-            };
+            const prs = { runner1: {}, runner2: {} };
             const distances = [2, 5, 6, 7, 10, 12, 16, 17];
             let totalKmR1 = 0, totalKmR2 = 0, totalRacesJuntos = 0, completedRacesR1 = 0, completedRacesR2 = 0;
             
@@ -957,7 +692,7 @@
             });
 
             localRaces.forEach(race => {
-                if(race.juntos && race.runner1.status === 'completed' && race.runner2.status === 'completed') {
+                if (race.juntos && race.runner1 && race.runner1.status === 'completed' && race.runner2 && race.runner2.status === 'completed') {
                     totalRacesJuntos++;
                 }
 
@@ -966,10 +701,8 @@
                     const dist = race.runner1.distance || race.distance;
                     const timeSec = timeToSeconds(race.runner1.time);
                     if (dist) totalKmR1 += dist;
-                    
                     if (prs.runner1[dist] && timeSec < prs.runner1[dist].seconds) {
-                        prs.runner1[dist].seconds = timeSec;
-                        prs.runner1[dist].time = secondsToTime(timeSec);
+                        prs.runner1[dist] = { seconds: timeSec, time: secondsToTime(timeSec) };
                     }
                 }
                 
@@ -978,10 +711,8 @@
                     const dist = race.runner2.distance || race.distance;
                     const timeSec = timeToSeconds(race.runner2.time);
                     if (dist) totalKmR2 += dist;
-
                     if (prs.runner2[dist] && timeSec < prs.runner2[dist].seconds) {
-                        prs.runner2[dist].seconds = timeSec;
-                        prs.runner2[dist].time = secondsToTime(timeSec);
+                        prs.runner2[dist] = { seconds: timeSec, time: secondsToTime(timeSec) };
                     }
                 }
             });
@@ -1022,13 +753,18 @@
         function renderHistory() {
             const container = document.getElementById('history-container');
             const loading = document.getElementById('loading-state');
-            container.innerHTML = ''; // Limpa o container
+            container.innerHTML = '';
             
-            if (localRaces.length === 0) {
-                loading.textContent = "Nenhuma corrida encontrada. Faça login e adicione a sua primeira!";
-                loading.classList.remove('hidden');
+            if (localRaces.length === 0 && viewingUserID) {
+                loading.textContent = "Nenhuma corrida encontrada para este perfil.";
                 container.appendChild(loading);
+                loading.classList.remove('hidden');
                 return;
+            } else if (!viewingUserID) {
+                 loading.textContent = "Selecione um perfil para visualizar.";
+                 container.appendChild(loading);
+                 loading.classList.remove('hidden');
+                 return;
             }
             
             loading.classList.add('hidden');
@@ -1042,158 +778,95 @@
 
             const sortedYears = Object.keys(racesByYear).sort((a, b) => b - a);
 
-            for (const year of sortedYears) {
+            sortedYears.forEach(year => {
                 const yearGroup = document.createElement('div');
                 yearGroup.className = 'year-group';
-                
-                const yearTitle = document.createElement('h2');
-                yearTitle.className = 'year-title';
                 const yearEmoji = `2️⃣0️⃣${year.slice(2)}`;
-                yearTitle.textContent = `${yearEmoji} (${racesByYear[year].length} provas)`;
-                yearGroup.appendChild(yearTitle);
-
+                yearGroup.innerHTML = `<h2 class="year-title">${yearEmoji} (${racesByYear[year].length} provas)</h2>`;
                 const raceList = document.createElement('div');
                 raceList.className = 'race-card-list';
-                
-                racesByYear[year].forEach(race => {
-                    raceList.appendChild(createRaceCard(race));
-                });
-                
+                racesByYear[year].forEach(race => raceList.appendChild(createRaceCard(race)));
                 yearGroup.appendChild(raceList);
                 container.appendChild(yearGroup);
-            }
+            });
         }
         
         function createRaceCard(race) {
             const card = document.createElement('div');
             let cardStatus = 'completed';
-            if ( (race.runner1 && race.runner1.status === 'planned') || (race.runner2 && race.runner2.status === 'planned') ) {
-                cardStatus = 'planned';
-            }
-            if ( (race.runner1 && race.runner1.status === 'skipped') && (race.runner2 && race.runner2.status === 'skipped') ) {
-                cardStatus = 'skipped';
-            }
-
+            if ((race.runner1 && race.runner1.status === 'planned') || (race.runner2 && race.runner2.status === 'planned')) { cardStatus = 'planned'; }
+            if ((race.runner1 && race.runner1.status === 'skipped') && (!race.runner2 || race.runner2.status === 'skipped')) { cardStatus = 'skipped'; }
+            
             card.className = `race-card status-${cardStatus}`;
             card.dataset.id = race.id;
 
             const runner1Dist = (race.runner1 && race.runner1.distance) || race.distance;
             const runner2Dist = (race.runner2 && race.runner2.distance) || race.distance;
-            
-            const runner1Pace = (race.runner1 && race.runner1.status === 'completed') ? calculatePace(race.runner1.time, runner1Dist) : ((race.runner1 && race.runner1.status === 'planned' && (race.runner1.goalTime || race.runner1.time)) ? calculatePace(race.runner1.goalTime || race.runner1.time, runner1Dist) : null);
-            const runner2Pace = (race.runner2 && race.runner2.status === 'completed') ? calculatePace(race.runner2.time, runner2Dist) : ((race.runner2 && race.runner2.status === 'planned' && (race.runner2.goalTime || race.runner2.time)) ? calculatePace(race.runner2.goalTime || race.runner2.time, runner2Dist) : null);
+            const runner1Pace = (race.runner1 && race.runner1.status === 'completed') ? calculatePace(race.runner1.time, runner1Dist) : null;
+            const runner2Pace = (race.runner2 && race.runner2.status === 'completed') ? calculatePace(race.runner2.time, runner2Dist) : null;
 
-            let raceDistDisplay = '';
-            if (race.distance) {
-                raceDistDisplay = `${race.distance}km`;
-            } else if (runner1Dist && runner2Dist && runner1Dist !== runner2Dist) {
-                raceDistDisplay = `${runner1Dist}k / ${runner2Dist}k`;
-            } else {
-                raceDistDisplay = `${runner1Dist || runner2Dist || ''}km`;
-            }
-            
-            // Lógica para mostrar/esconder botões de edição
+            let raceDistDisplay = race.distance ? `${race.distance}km` : (runner1Dist && runner2Dist && runner1Dist !== runner2Dist ? `${runner1Dist || '?'}k/${runner2Dist || '?'}k` : `${runner1Dist || runner2Dist || '?'}km`);
+
             const showControls = (currentUser && currentUser.uid === viewingUserID);
 
             card.innerHTML = `
-                <div class="race-card-header">
-                    <h3>${race.raceName}</h3>
-                    <span class="date">${new Date(race.date).toLocaleDateString('pt-BR', {timeZone: 'UTC', day: '2-digit', month: '2-digit', year: 'numeric'})}</span>
-                </div>
+                <div class="race-card-header"><h3>${race.raceName}</h3><span class="date">${new Date(race.date).toLocaleDateString('pt-BR', {timeZone: 'UTC', day: '2-digit', month: '2-digit', year: 'numeric'})}</span></div>
                 <div class="race-card-body">
-                    ${createRunnerInfoHTML(currentProfile.runner1_name, 'runner1', race.runner1, runner1Dist, runner1Pace, currentProfile.runner1_emoji)}
-                    ${createRunnerInfoHTML(currentProfile.runner2_name, 'runner2', race.runner2, runner2Dist, runner2Pace, currentProfile.runner2_emoji)}
+                    ${createRunnerInfoHTML(currentProfile.runner1_name, 'runner1', race.runner1, runner1Dist, runner1Pace, '🏃‍♂️')}
+                    ${createRunnerInfoHTML(currentProfile.runner2_name, 'runner2', race.runner2, runner2Dist, runner2Pace, '🏃‍♀️')}
                 </div>
                 <div class="race-card-footer">
-                    <div>
-                        <span class="juntos-icon">${race.juntos ? '👩🏻‍❤️‍👨🏻' : ''}</span>
-                        <span class="race-notes">${race.notes || ''}</span>
-                    </div>
+                    <div><span class="juntos-icon">${race.juntos ? '👩🏻‍❤️‍👨🏻' : ''}</span><span class="race-notes">${race.notes || ''}</span></div>
                     <div style="display: flex; align-items: center;">
                         <span class="race-distance">${raceDistDisplay}</span>
                         <div class="race-controls ${showControls ? '' : 'hidden'}">
-                            <button class="btn-control btn-edit" title="Editar">✏️</button>
-                            <button class="btn-control btn-delete" title="Excluir">🗑️</button>
+                            <button class="btn-control btn-edit" title="Editar">✏️</button><button class="btn-control btn-delete" title="Excluir">🗑️</button>
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
             
             if (showControls) {
                 card.querySelector('.btn-edit').addEventListener('click', () => openModal(race.id));
                 card.querySelector('.btn-delete').addEventListener('click', () => deleteRace(race.id));
             }
-
             return card;
         }
 
         function createRunnerInfoHTML(name, runnerClass, runnerData, distance, pace, emoji) {
-            let timeHTML = '';
-            let paceHTML = '';
-
-            if (!runnerData) { // Se não houver dados para este corredor
-                 timeHTML = `<div class="runner-time skipped">❌ Não correu</div>`;
-            } else {
-                switch (runnerData.status) {
-                    case 'completed':
-                        timeHTML = `<div class="runner-time">${secondsToTime(timeToSeconds(runnerData.time))}</div>`;
-                        if (pace && pace !== 'N/A') {
-                            paceHTML = `<div class="runner-pace">${pace}</div>`;
-                        }
-                        break;
-                    case 'planned':
-                        const goalTime = runnerData.goalTime || (runnerData.time && runnerData.time.includes(':') ? runnerData.time : null);
-                        timeHTML = `<div class="runner-time goal">⏳ ${goalTime ? secondsToTime(timeToSeconds(goalTime)) : 'Planejada'}</div>`;
-                        if (pace && pace !== 'N/A') {
-                             paceHTML = `<div class="runner-pace goal">(Meta: ${pace})</div>`;
-                        }
-                        break;
-                    case 'skipped':
-                        timeHTML = `<div class="runner-time skipped">❌ Não correu</div>`;
-                        break;
-                    default:
-                        timeHTML = `<div class="runner-time skipped">N/A</div>`;
-                }
+            let timeHTML = '', paceHTML = '';
+            runnerData = runnerData || { status: 'skipped' };
+            switch (runnerData.status) {
+                case 'completed':
+                    const time = secondsToTime(timeToSeconds(runnerData.time));
+                    timeHTML = `<div class="runner-time">${time !== 'N/A' ? time : '✅'}</div>`;
+                    if (pace && pace !== 'N/A') paceHTML = `<div class="runner-pace">${pace}</div>`;
+                    break;
+                case 'planned':
+                    const goalTime = runnerData.goalTime || (runnerData.time && runnerData.time.includes(':') ? runnerData.time : null);
+                    timeHTML = `<div class="runner-time goal">⏳ ${goalTime ? secondsToTime(timeToSeconds(goalTime)) : 'Planejada'}</div>`;
+                    if (pace && pace !== 'N/A') paceHTML = `<div class="runner-pace goal">(Meta: ${pace})</div>`;
+                    break;
+                default: timeHTML = `<div class="runner-time skipped">❌ Não correu</div>`;
             }
-            
-            return `
-            <div class="runner-info">
-                <span class="runner-name ${runnerClass}">${name} ${emoji}</span>
-                <div class="runner-details">
-                    ${timeHTML}
-                    ${paceHTML}
-                </div>
-            </div>`;
+            return `<div class="runner-info"><span class="runner-name ${runnerClass}">${name} ${emoji}</span><div class="runner-details">${timeHTML}${paceHTML}</div></div>`;
         }
-        
-        // =================================================================
-        // LÓGICA DO MODAL (FORMULÁRIO)
-        // =================================================================
-        
-        const modal = document.getElementById('race-modal');
-        const form = document.getElementById('race-form');
-        const modalTitle = document.getElementById('modal-title');
-        const btnDelete = document.getElementById('btn-delete');
+
+        // --- Funções do Modal e Lógica de CRUD (Create, Read, Update, Delete) ---
+        const modal = document.getElementById('race-modal'), form = document.getElementById('race-form'), modalTitle = document.getElementById('modal-title'), btnDelete = document.getElementById('btn-delete');
         
         function openModal(raceId = null) {
-            if (!currentUser) return; // Segurança extra
-
+            if (!currentUser) return;
             form.reset();
             document.getElementById('race-id').value = '';
             btnDelete.classList.add('hidden');
-            
-            // Atualiza nomes no formulário
             document.getElementById('runner1-form-name').innerHTML = `${currentProfile.runner1_name} ${currentProfile.runner1_emoji}`;
             document.getElementById('runner2-form-name').innerHTML = `${currentProfile.runner2_name} ${currentProfile.runner2_emoji}`;
-            
+
             if (raceId) {
-                // --- MODO EDIÇÃO ---
                 modalTitle.textContent = 'Editar Corrida';
                 btnDelete.classList.remove('hidden');
-                
                 const race = localRaces.find(r => r.id === raceId);
                 if (!race) return;
-
                 document.getElementById('race-id').value = race.id;
                 document.getElementById('raceName').value = race.raceName;
                 document.getElementById('raceDate').value = race.date;
@@ -1201,182 +874,174 @@
                 document.getElementById('raceJuntos').checked = race.juntos;
                 document.getElementById('raceNotes').value = race.notes || '';
                 
-                // Corredor 1
-                if(race.runner1) {
+                if (race.runner1) {
                     document.getElementById('runner1Status').value = race.runner1.status || 'skipped';
                     const runner1Time = race.runner1.status === 'completed' ? race.runner1.time : (race.runner1.goalTime || race.runner1.time || '');
                     document.getElementById('runner1Time').value = normalizeTime(runner1Time) ? secondsToTime(timeToSeconds(runner1Time)) : '';
                     document.getElementById('runner1Distance').value = race.runner1.distance || '';
                 }
-                
-                // Corredor 2
-                if(race.runner2) {
+                if (race.runner2) {
                     document.getElementById('runner2Status').value = race.runner2.status || 'skipped';
                     const runner2Time = race.runner2.status === 'completed' ? race.runner2.time : (race.runner2.goalTime || race.runner2.time || '');
                     document.getElementById('runner2Time').value = normalizeTime(runner2Time) ? secondsToTime(timeToSeconds(runner2Time)) : '';
                     document.getElementById('runner2Distance').value = race.runner2.distance || '';
                 }
-                
             } else {
-                // --- MODO CRIAÇÃO ---
                 modalTitle.textContent = 'Adicionar Nova Corrida';
                 document.getElementById('raceDate').value = new Date().toISOString().split('T')[0];
             }
-            
             modal.showModal();
         }
-        
-        function closeModal() {
-            modal.close();
-        }
-        
+
+        function closeModal() { modal.close(); }
+
         function handleFormSubmit(e) {
             e.preventDefault();
-            if (!currentUser) {
-                alert("Você precisa estar logado para salvar corridas.");
-                return;
-            }
+            if (!currentUser) { alert("Você precisa estar logado para salvar."); return; }
 
             const id = document.getElementById('race-id').value;
-            const raceId = id || db.ref().push().key; // Gera um ID único do Firebase se for novo
-            const date = document.getElementById('raceDate').value;
+            const raceId = id || db.ref().push().key;
             
-            const runner1TimeRaw = document.getElementById('runner1Time').value;
-            const runner2TimeRaw = document.getElementById('runner2Time').value;
-            
-            const runner1Status = document.getElementById('runner1Status').value;
-            const runner2Status = document.getElementById('runner2Status').value;
-
             const newRace = {
-                date: date,
-                year: new Date(date + 'T00:00:00').getFullYear().toString(),
+                date: document.getElementById('raceDate').value,
+                year: new Date(document.getElementById('raceDate').value + 'T00:00:00').getFullYear().toString(),
                 raceName: document.getElementById('raceName').value,
                 distance: parseFloat(document.getElementById('raceDistance').value) || null,
                 juntos: document.getElementById('raceJuntos').checked,
                 notes: document.getElementById('raceNotes').value || null,
                 runner1: {
-                    status: runner1Status,
-                    time: runner1Status === 'completed' ? normalizeTime(runner1TimeRaw) : null,
-                    goalTime: runner1Status === 'planned' ? normalizeTime(runner1TimeRaw) : null,
+                    status: document.getElementById('runner1Status').value,
+                    time: document.getElementById('runner1Status').value === 'completed' ? normalizeTime(document.getElementById('runner1Time').value) : null,
+                    goalTime: document.getElementById('runner1Status').value === 'planned' ? normalizeTime(document.getElementById('runner1Time').value) : null,
                     distance: parseFloat(document.getElementById('runner1Distance').value) || null
                 },
                 runner2: {
-                    status: runner2Status,
-                    time: runner2Status === 'completed' ? normalizeTime(runner2TimeRaw) : null,
-                    goalTime: runner2Status === 'planned' ? normalizeTime(runner2TimeRaw) : null,
+                    status: document.getElementById('runner2Status').value,
+                    time: document.getElementById('runner2Status').value === 'completed' ? normalizeTime(document.getElementById('runner2Time').value) : null,
+                    goalTime: document.getElementById('runner2Status').value === 'planned' ? normalizeTime(document.getElementById('runner2Time').value) : null,
                     distance: parseFloat(document.getElementById('runner2Distance').value) || null
                 }
             };
 
-            const userRacesRef = db.ref(`users/${currentUser.uid}/races/${raceId}`);
-            userRacesRef.set(newRace)
-                .then(() => {
-                    console.log("Corrida salva com sucesso!");
-                    closeModal();
-                })
-                .catch(error => {
-                    console.error("Erro ao salvar: ", error);
-                    alert("Erro ao salvar: " + error.message);
-                });
+            db.ref(`users/${currentUser.uid}/races/${raceId}`).set(newRace)
+                .then(() => { closeModal(); })
+                .catch(error => alert("Erro ao salvar: " + error.message));
         }
-        
+
         function deleteRace(raceId) {
             if (!currentUser) return;
-            
             const race = localRaces.find(r => r.id === raceId);
-            if (!confirm(`Tem certeza que deseja excluir esta corrida?\n\n${race.raceName} (${race.date})`)) {
-                return;
-            }
-            
-            const raceRef = db.ref(`users/${currentUser.uid}/races/${raceId}`);
-            raceRef.remove()
-                .then(() => {
-                    console.log("Corrida excluída.");
-                    closeModal();
-                })
-                .catch(error => {
-                    console.error("Erro ao excluir: ", error);
-                    alert("Erro ao excluir: " + error.message);
-                });
+            if (!confirm(`Tem certeza que deseja excluir a corrida:\n\n${race.raceName}?`)) return;
+            db.ref(`users/${currentUser.uid}/races/${raceId}`).remove()
+                .then(() => closeModal())
+                .catch(error => alert("Erro ao excluir: " + error.message));
         }
-        
+
         function renderAll() {
-            if(viewingUserID) { // Só renderiza se houver um perfil para ver
+            if(viewingUserID) {
                 renderDashboard();
                 renderHistory();
             }
         }
+        
+        // --- Funções de Administrador ---
+        function approveUser(uid) {
+            const pendingUserRef = db.ref(`pending_users/${uid}`);
+            pendingUserRef.once('value', snapshot => {
+                const userData = snapshot.val();
+                if (!userData) return;
 
-        // =================================================================
-        // INICIALIZAÇÃO E EVENT LISTENERS GLOBAIS
-        // =================================================================
+                // 1. Criar perfil público
+                db.ref(`approved_users/${uid}`).set({
+                    runner1_name: userData.runner1_name,
+                    runner2_name: userData.runner2_name,
+                    email: userData.email
+                });
+
+                // 2. Criar perfil completo do usuário
+                db.ref(`users/${uid}/profile`).set({
+                    runner1_name: userData.runner1_name,
+                    runner2_name: userData.runner2_name,
+                    email: userData.email,
+                    team_name: "Nova Equipe"
+                });
+
+                // 3. Popular com dados iniciais
+                const racesAsObject = initialRaceData.reduce((acc, race) => {
+                    const newKey = db.ref().push().key; 
+                    const raceData = { ...race };
+                    delete raceData.id; // Remove o ID estático
+                    acc[newKey] = raceData;
+                    return acc;
+                }, {});
+                db.ref(`users/${uid}/races`).set(racesAsObject);
+
+                // 4. Remover da lista de pendentes
+                pendingUserRef.remove();
+            });
+        }
+
+        function rejectUser(uid) {
+            if (!confirm("Isso excluirá o pedido de cadastro. Deseja continuar?")) return;
+            db.ref(`pending_users/${uid}`).remove();
+            // Idealmente, aqui também chamaríamos uma função de backend para excluir o usuário do Firebase Auth.
+            // Por segurança, a exclusão de usuários não é permitida diretamente do cliente.
+            alert("Pedido de cadastro rejeitado. O usuário ainda precisa ser removido manualmente do painel de Autenticação do Firebase.");
+        }
+
+
+        // --- Inicialização e Event Listeners Globais ---
         
         document.addEventListener('DOMContentLoaded', () => {
+            auth.onAuthStateChanged(setupUIForAuthState);
             
-            // Listeners do Modal
             document.getElementById('btn-add-new').addEventListener('click', () => openModal());
-            document.getElementById('btn-close-modal').addEventListener('click', (e) => {
-                e.preventDefault();
-                closeModal();
-            });
-            document.getElementById('btn-cancel').addEventListener('click', (e) => {
-                e.preventDefault();
-                closeModal();
-            });
+            document.getElementById('btn-close-modal').addEventListener('click', (e) => { e.preventDefault(); closeModal(); });
+            document.getElementById('btn-cancel').addEventListener('click', (e) => { e.preventDefault(); closeModal(); });
             form.addEventListener('submit', handleFormSubmit);
+            btnDelete.addEventListener('click', () => { if (document.getElementById('race-id').value) { deleteRace(document.getElementById('race-id').value); }});
             
-            btnDelete.addEventListener('click', () => {
-                const id = document.getElementById('race-id').value;
-                if(id) {
-                    deleteRace(id);
-                }
-            });
-
-            // Listeners de Autenticação
             document.getElementById('login-form').addEventListener('submit', (e) => {
                 e.preventDefault();
                 const email = document.getElementById('login-email').value;
                 const pass = document.getElementById('login-pass').value;
-                auth.signInWithEmailAndPassword(email, pass)
-                    .catch(error => alert("Erro no login: " + error.message));
+                auth.signInWithEmailAndPassword(email, pass).catch(error => alert("Erro no login: " + error.message));
             });
 
             document.getElementById('btn-signup').addEventListener('click', () => {
                 const email = document.getElementById('login-email').value;
                 const pass = document.getElementById('login-pass').value;
-                if (!email || !pass || pass.length < 6) {
-                    alert("Por favor, preencha e-mail e uma senha com no mínimo 6 caracteres.");
-                    return;
-                }
+                if (!email || !pass || pass.length < 6) { alert("Preencha e-mail e uma senha com no mínimo 6 caracteres."); return; }
+
+                // Pede os nomes no momento do cadastro
+                const r1 = prompt("Nome do Corredor 1:", "Thiago");
+                const r2 = prompt("Nome do Corredor 2:", "Thamis");
+                if(!r1 || !r2) return; // Cancela se não preencher
+
                 auth.createUserWithEmailAndPassword(email, pass)
-                    .then((userCredential) => {
-                        // Usuário cadastrado e logado
-                        // Agora, vamos criar o perfil dele no RTDB
-                        const uid = userCredential.user.uid;
-                        const profileRef = db.ref(`users/${uid}/profile`);
-                        
-                        // Você pode pré-popular com os nomes de vocês, ou deixar genérico
-                        // Vou deixar genérico para o SaaS
-                        profileRef.set({
-                            runner1_name: "Novo Corredor 1",
-                            runner1_nameShort: "C1",
-                            runner2_name: "Novo Corredor 2",
-                            runner2_nameShort: "C2",
-                            team_name: "Minha Equipe",
-                            email: email
+                    .then(userCredential => {
+                        db.ref(`pending_users/${userCredential.user.uid}`).set({
+                            email: email,
+                            runner1_name: r1,
+                            runner2_name: r2,
+                            requestedAt: firebase.database.ServerValue.TIMESTAMP
                         });
-                        // O `loadUserProfile` será acionado pelo `onAuthStateChanged`
-                        // e irá popular as corridas iniciais.
-                        alert("Usuário cadastrado com sucesso! Você já está logado.");
+                        alert("Cadastro enviado! Aguarde a aprovação do administrador para fazer login.");
+                        auth.signOut(); // Desloga o usuário até ser aprovado
                     })
                     .catch(error => alert("Erro ao cadastrar: " + error.message));
             });
 
-            document.getElementById('btn-logout').addEventListener('click', () => {
-                auth.signOut();
+            document.getElementById('btn-logout').addEventListener('click', () => auth.signOut());
+
+            document.getElementById('profile-select').addEventListener('change', (e) => {
+                const selectedUid = e.target.value;
+                if (selectedUid) {
+                    viewingUserID = selectedUid;
+                    loadUserProfile(selectedUid);
+                }
             });
         });
-
     </script>
 </body>
 </html>
