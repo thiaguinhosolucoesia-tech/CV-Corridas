@@ -80,6 +80,18 @@
         .auth-btn:hover {
             background: rgba(255, 255, 255, 0.3);
         }
+
+        /* NOVO: Botão Voltar */
+        #btn-back-to-public {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            padding: 8px 15px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        #btn-back-to-public:hover {
+             background: rgba(0, 0, 0, 0.4);
+        }
         
         #user-info {
             font-size: 0.9em;
@@ -91,18 +103,40 @@
             align-items: center;
             gap: 8px;
         }
+        
+        #user-info.admin-user {
+            background: #ffc107;
+            color: #1f2027;
+        }
 
         .hidden {
             display: none !important;
         }
         
         /* ================================================= */
-        /* TELA DE LOGIN (EMAIL/SENHA)                       */
+        /* TELA DE LOGIN / PENDENTE                          */
         /* ================================================= */
-        #login-view {
+        #login-view, #pending-approval-view {
             padding: 40px 30px;
             background: #1a1a2e;
             text-align: center;
+        }
+        
+        #pending-approval-view {
+             padding: 60px 30px;
+        }
+        
+        #pending-approval-view h2 {
+            color: #ffc107; /* Amarelo Atenção */
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+        
+        #pending-approval-view p {
+            font-size: 1.1em;
+            color: #b0b0b0;
+            max-width: 500px;
+            margin: 0 auto;
         }
 
         #login-view h2 {
@@ -133,6 +167,17 @@
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
         }
         
+        /* NOVOS CAMPOS DE CADASTRO */
+        #signup-fields {
+            border: 1px dashed #555;
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
         #login-error {
             color: #f44336;
             font-weight: 600;
@@ -151,10 +196,79 @@
         }
         
         #btn-signup-submit {
-            background: #6c757d;
+            background: #28a745;
         }
         #btn-signup-submit:hover {
-             background: #5a6268;
+             background: #218838;
+        }
+        
+        #login-toggle-link {
+            color: #667eea;
+            text-decoration: underline;
+            cursor: pointer;
+            margin-top: 15px;
+            display: inline-block;
+        }
+
+        /* ================================================= */
+        /* PAINEL DE ADMIN (ATUALIZADO)                      */
+        /* ================================================= */
+        #admin-panel {
+            padding: 30px;
+            background: #ffc107; /* Fundo de admin */
+            color: #1f2027;
+            border-bottom: 2px solid #e0a800;
+        }
+        
+        #admin-panel h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        #pending-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .pending-item {
+            background: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .pending-item-info {
+            font-weight: 600;
+        }
+        
+        .pending-item-info span {
+            font-weight: normal;
+            font-size: 0.9em;
+            color: #555;
+            margin-left: 10px;
+            display: block; /* Mostra nomes abaixo do email */
+        }
+        
+        .btn-approve {
+            padding: 8px 15px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn-approve:hover {
+            background: #218838;
         }
 
         /* ================================================= */
@@ -164,7 +278,7 @@
         #public-view {
             padding: 30px;
             text-align: center;
-            background: #1f2027; /* Um pouco mais claro que o login-view */
+            background: #1f2027; 
             border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
         
@@ -685,6 +799,14 @@
             #login-form {
                 max-width: 100%;
             }
+            
+            /* Novo: Botão Voltar responsivo */
+            #btn-back-to-public {
+                top: 15px;
+                left: 10px;
+                padding: 8px 10px;
+                font-size: 0.8em;
+            }
 
             .header h1 { font-size: 2em; }
             .header p { font-size: 1em; }
@@ -711,6 +833,8 @@
 
     <div class="container">
         <div class="header">
+            <button class="auth-btn hidden" id="btn-back-to-public">⬅️ Voltar à Lista</button>
+            
             <div class="auth-controls">
                 <div id="user-info" class="hidden">
                     <span id="user-email"></span>
@@ -721,21 +845,35 @@
             <h1>Currículo Esportivo 🏃‍♂️🏃‍♀️</h1>
             <p id="header-subtitle">Carregando...</p>
         </div>
+        
+        <div id="admin-panel" class="hidden">
+            <h2>⚙️ Painel de Admin: Aprovações Pendentes</h2>
+            <div id="pending-list">
+                <div class="loader" style="color:#1f2027;">Carregando...</div>
+            </div>
+        </div>
 
         <div id="login-or-public-view">
             
             <div id="login-view">
-                <h2>Acessar Meu Currículo</h2>
+                <h2 id="login-title">Acessar Meu Currículo</h2>
                 <form id="login-form">
                     <input type="email" id="login-email" placeholder="E-mail" required>
-                    <input type="password" id="login-password" placeholder="Senha" required>
+                    <input type="password" id="login-password" placeholder="Senha (mín. 6 caracteres)" required>
                     
+                    <div id="signup-fields" class="hidden">
+                        <input type="text" id="signup-runner1-name" placeholder="Seu nome (Ex: Thiago)">
+                        <input type="text" id="signup-runner2-name" placeholder="Nome Corredor 2 (Opcional)">
+                        <input type="text" id="signup-team-name" placeholder="Nome da Equipe (Ex: Le Runners)">
+                    </div>
+                   
                     <div class="login-buttons">
                          <button type="button" class="auth-btn btn-primary" id="btn-login-submit">Entrar</button>
-                         <button type="button" class="auth-btn" id="btn-signup-submit">Cadastrar Novo Usuário</button>
+                         <button type="button" class="auth-btn" id="btn-signup-submit">Cadastrar</button>
                     </div>
                    
                     <div id="login-error"></div>
+                    <a id="login-toggle-link">Não tem conta? Cadastre-se</a>
                 </form>
             </div>
 
@@ -745,6 +883,11 @@
                     <div class="loader">Carregando perfis públicos...</div>
                 </div>
             </div>
+        </div>
+        
+        <div id="pending-approval-view" class="hidden">
+            <h2>⏳ Cadastro Recebido</h2>
+            <p>Sua conta foi criada com sucesso e está aguardando a aprovação do administrador. Você será liberado em breve.</p>
         </div>
 
         <div id="user-content" class="hidden">
@@ -863,7 +1006,7 @@
 
     <script>
         // =================================================================
-        // ARQUITETURA V3.2 - INICIALIZAÇÃO DO FIREBASE (COM SUAS CHAVES)
+        // ARQUITETURA V3.4 - INICIALIZAÇÃO DO FIREBASE (COM SUAS CHAVES)
         // =================================================================
         const firebaseConfig = {
           apiKey: "AIzaSyAyMTzM7sem903SLJsmBeMF3XyvaeGv7Hg",
@@ -876,7 +1019,7 @@
         };
         
         // =================================================================
-        // ARQUITETURA V3.2 - LÓGICA DA APLICAÇÃO (CADASTRO + LOGIN)
+        // ARQUITETURA V3.4 - LÓGICA (ADMIN APPROVAL + SIGNUP FIELDS)
         // =================================================================
 
         // --- Variáveis Globais do App ---
@@ -890,6 +1033,7 @@
         let currentViewingUid = null; 
         let isAdmin = false; 
         
+        // Chaves de dados estáticas para corresponder ao seu JSON
         const RUNNER_1_KEY = "runner1";
         const RUNNER_2_KEY = "runner2";
         
@@ -899,6 +1043,7 @@
         // --- Cache de Elementos DOM ---
         const dom = {
             btnLogout: document.getElementById('btn-logout'),
+            btnBackToPublic: document.getElementById('btn-back-to-public'), // NOVO
             userInfo: document.getElementById('user-info'),
             userEmail: document.getElementById('user-email'),
             loginOrPublicView: document.getElementById('login-or-public-view'),
@@ -907,8 +1052,14 @@
             loginEmail: document.getElementById('login-email'),
             loginPassword: document.getElementById('login-password'),
             loginError: document.getElementById('login-error'),
-            btnLoginSubmit: document.getElementById('btn-login-submit'), // Botão Entrar
-            btnSignUpSubmit: document.getElementById('btn-signup-submit'), // Botão Cadastrar
+            loginTitle: document.getElementById('login-title'), // NOVO
+            btnLoginSubmit: document.getElementById('btn-login-submit'),
+            btnSignUpSubmit: document.getElementById('btn-signup-submit'), 
+            loginToggleLink: document.getElementById('login-toggle-link'), // NOVO
+            signupFields: document.getElementById('signup-fields'), // NOVO
+            signupRunner1Name: document.getElementById('signup-runner1-name'), // NOVO
+            signupRunner2Name: document.getElementById('signup-runner2-name'), // NOVO
+            signupTeamName: document.getElementById('signup-team-name'), // NOVO
             publicView: document.getElementById('public-view'),
             publicProfileList: document.getElementById('public-profile-list'),
             userContent: document.getElementById('user-content'),
@@ -925,7 +1076,10 @@
             btnCloseModal: document.getElementById('btn-close-modal'),
             btnCancel: document.getElementById('btn-cancel'),
             runner1FormGroup: document.getElementById('runner1-form-group'),
-            runner2FormGroup: document.getElementById('runner2-form-group')
+            runner2FormGroup: document.getElementById('runner2-form-group'),
+            adminPanel: document.getElementById('admin-panel'),
+            pendingList: document.getElementById('pending-list'),
+            pendingApprovalView: document.getElementById('pending-approval-view')
         };
 
         // --- Funções Utilitárias de Tempo e Pace ---
@@ -972,9 +1126,16 @@
 
         function updateProfileUI() {
             const profile = db.profile;
-            if (profile && profile.runner1Name && profile.runner2Name) {
+            // Define perfis padrão
+            RUNNER_1_PROFILE = { name: 'Corredor 1', nameShort: 'Corredor 1', emoji: '🏃‍♂️' };
+            RUNNER_2_PROFILE = { name: 'Corredora 2', nameShort: 'Corredora 2', emoji: '🏃‍♀️' };
+            
+            // Sobrescreve com dados do DB se existirem
+            if (profile && profile.runner1Name) {
                 RUNNER_1_PROFILE = { name: profile.runner1Name, nameShort: profile.runner1Name.split(' ')[0] || "Corredor", emoji: '🏃‍♂️' };
-                RUNNER_2_PROFILE = { name: profile.runner2Name, nameShort: profile.runner2Name.split(' ')[0] || "Corredora", emoji: '🏃‍♀️' };
+            }
+            if (profile && profile.runner2Name) {
+                 RUNNER_2_PROFILE = { name: profile.runner2Name, nameShort: profile.runner2Name.split(' ')[0] || "Corredora", emoji: '🏃‍♀️' };
             }
 
             dom.headerSubtitle.textContent = `${RUNNER_1_PROFILE.name} & ${RUNNER_2_PROFILE.name}`;
@@ -998,25 +1159,24 @@
                 const runner1Data = race[RUNNER_1_KEY]; 
                 const runner2Data = race[RUNNER_2_KEY];
                 
-                if(!runner1Data || !runner2Data) return; 
-
+                if(!runner1Data && !runner2Data) return; 
                 if(race.juntos && runner1Data.status === 'completed' && runner2Data.status === 'completed') totalRacesJuntos++;
 
-                if (runner1Data.status === 'completed') {
+                if (runner1Data && runner1Data.status === 'completed') {
                     completedRacesRunner1++;
                     const dist = runner1Data.distance || race.distance;
                     const timeSec = timeToSeconds(runner1Data.time);
-                    if (dist) totalKmRunner1 += dist;
+                    if (dist) totalKmRunner1 += parseFloat(dist);
                     if (prs.runner1[dist] && timeSec < prs.runner1[dist].seconds) {
                         prs.runner1[dist] = { seconds: timeSec, time: secondsToTime(timeSec) };
                     }
                 }
 
-                if (runner2Data.status === 'completed') {
+                if (runner2Data && runner2Data.status === 'completed') {
                     completedRacesRunner2++;
                     const dist = runner2Data.distance || race.distance;
                     const timeSec = timeToSeconds(runner2Data.time);
-                    if (dist) totalKmRunner2 += dist;
+                    if (dist) totalKmRunner2 += parseFloat(dist);
                     if (prs.runner2[dist] && timeSec < prs.runner2[dist].seconds) {
                         prs.runner2[dist] = { seconds: timeSec, time: secondsToTime(timeSec) };
                     }
@@ -1291,14 +1451,12 @@
 
         function loadProfile(uid) {
             const profileRef = firebase.database().ref(`/users/${uid}/profile`);
-            // 'once' é melhor aqui para evitar sobrepor dados se o listener de auth disparar de novo
             profileRef.once('value', (snapshot) => {
                 const profileData = snapshot.val();
                 if (profileData) {
                     db.profile = profileData;
                     renderAll(); 
                 }
-                // A lógica de criação de perfil foi movida para handleSignUp
             });
         }
         
@@ -1317,10 +1475,6 @@
         }
 
         function loadPublicView() {
-            dom.loginOrPublicView.classList.remove('hidden');
-            dom.loginView.classList.remove('hidden');
-            dom.publicView.classList.remove('hidden');
-            dom.userContent.classList.add('hidden'); 
             dom.headerSubtitle.textContent = "Selecione um currículo ou faça login";
             
             const publicProfilesRef = firebase.database().ref('/publicProfiles');
@@ -1339,6 +1493,7 @@
                         card.addEventListener('click', () => {
                             dom.loginOrPublicView.classList.add('hidden');
                             dom.userContent.classList.remove('hidden');
+                            dom.btnBackToPublic.classList.remove('hidden'); // MOSTRA o botão voltar
                             loadProfile(uid); 
                             loadRaces(uid);
                         });
@@ -1350,52 +1505,202 @@
             });
         }
         
+        // --- FUNÇÕES DE LÓGICA DE UI ---
+        
+        function showLoggedOutView() {
+            authUser = null;
+            isAdmin = false;
+            currentViewingUid = null;
+            
+            dom.btnLogout.classList.add('hidden');
+            dom.btnBackToPublic.classList.add('hidden'); // Esconde o botão voltar
+            dom.userInfo.classList.add('hidden');
+            dom.controlsSection.classList.add('hidden');
+            dom.adminPanel.classList.add('hidden');
+            dom.pendingApprovalView.classList.add('hidden');
+            
+            dom.loginOrPublicView.classList.remove('hidden');
+            dom.publicView.classList.remove('hidden'); // Garante que a lista pública apareça
+            dom.userContent.classList.add('hidden'); 
+            dom.loginError.textContent = '';
+            dom.loginForm.reset();
+            
+            db = { races: {}, profile: {} };
+            loadPublicView(); 
+        }
+        
+        function showPendingView() {
+            dom.btnLogout.classList.remove('hidden'); 
+            dom.userInfo.classList.remove('hidden');
+            dom.userEmail.textContent = authUser.email;
+            
+            dom.loginOrPublicView.classList.add('hidden');
+            dom.userContent.classList.add('hidden');
+            dom.adminPanel.classList.add('hidden');
+            dom.btnBackToPublic.classList.add('hidden');
+            
+            dom.pendingApprovalView.classList.remove('hidden'); 
+        }
+        
+        function showUserDashboard(user) {
+            dom.btnLogout.classList.remove('hidden');
+            dom.userInfo.classList.remove('hidden');
+            dom.userEmail.textContent = user.email;
+            dom.controlsSection.classList.remove('hidden'); 
+            
+            dom.loginOrPublicView.classList.add('hidden');
+            dom.pendingApprovalView.classList.add('hidden');
+            dom.btnBackToPublic.classList.add('hidden'); // Esconde o botão voltar no dashboard pessoal
+            
+            dom.userContent.classList.remove('hidden');
+
+            loadProfile(user.uid);
+            loadRaces(user.uid);
+            
+            if (isAdmin) {
+                dom.userInfo.classList.add('admin-user');
+                loadAdminPanel();
+            } else {
+                 dom.userInfo.classList.remove('admin-user');
+            }
+        }
+        
+        // --- FUNÇÕES DE ADMIN (ATUALIZADAS) ---
+        
+        function loadAdminPanel() {
+            dom.adminPanel.classList.remove('hidden');
+            const pendingRef = firebase.database().ref('/pendingApprovals');
+            
+            pendingRef.on('value', (snapshot) => {
+                const requests = snapshot.val();
+                if (!requests) {
+                    dom.pendingList.innerHTML = '<div class="loader" style="color:#1f2027; padding: 10px;">Nenhuma aprovação pendente.</div>';
+                    return;
+                }
+                
+                dom.pendingList.innerHTML = '';
+                Object.entries(requests).forEach(([uid, request]) => {
+                    const item = document.createElement('div');
+                    item.className = 'pending-item';
+                    item.innerHTML = `
+                        <div class="pending-item-info">
+                            ${request.email}
+                            <span>${request.runner1Name} ${request.runner2Name ? '& ' + request.runner2Name : ''} (${request.teamName || 'Sem Equipe'})</span>
+                        </div>
+                        <button class="btn-approve" 
+                            data-uid="${uid}" 
+                            data-r1="${request.runner1Name}" 
+                            data-r2="${request.runner2Name || ''}" 
+                            data-team="${request.teamName || ''}">
+                            Aprovar
+                        </button>
+                    `;
+                    dom.pendingList.appendChild(item);
+                });
+                
+                dom.pendingList.querySelectorAll('.btn-approve').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const data = e.target.dataset;
+                        approveUser(data.uid, data.r1, data.r2, data.team);
+                    });
+                });
+            });
+        }
+        
+        function approveUser(uid, runner1Name, runner2Name, teamName) {
+            if (!isAdmin) return;
+            
+            // 1. Criar o perfil de usuário padrão
+            const defaultProfile = {
+                runner1Name: runner1Name,
+                runner2Name: runner2Name || "Corredor(a) 2",
+                teamName: teamName || "Minha Equipe"
+            };
+            
+            // 2. Criar o perfil público padrão
+            const defaultPublicProfile = {
+                runner1Name: runner1Name,
+                runner2Name: runner2Name || "Corredor(a) 2",
+                teamName: teamName || "Minha Equipe"
+            };
+            
+            const updates = {};
+            updates[`/users/${uid}/profile`] = defaultProfile;
+            updates[`/publicProfiles/${uid}`] = defaultPublicProfile;
+            updates[`/pendingApprovals/${uid}`] = null; 
+
+            firebase.database().ref().update(updates)
+                .then(() => {
+                    alert(`Usuário ${runner1Name} aprovado com sucesso!`);
+                })
+                .catch((err) => {
+                    console.error("Erro ao aprovar:", err);
+                    alert("Erro ao aprovar usuário.");
+                });
+        }
+        
+        
         // --- Funções de Autenticação (Firebase Auth) ---
         
         function showLoginError(message) {
              dom.loginError.textContent = message;
-             dom.loginError.classList.remove('hidden');
         }
 
-        /**
-         * NOVA FUNÇÃO: Lida com o cadastro de novos usuários
-         */
+        // NOVO: Alterna a UI entre Login e Cadastro
+        function toggleLoginMode(isSigningUp) {
+            if (isSigningUp) {
+                dom.loginTitle.textContent = "Cadastrar Novo Usuário";
+                dom.signupFields.classList.remove('hidden');
+                dom.btnLoginSubmit.classList.add('hidden');
+                dom.btnSignUpSubmit.classList.remove('hidden');
+                dom.loginToggleLink.textContent = "Já tem conta? Entrar";
+            } else {
+                dom.loginTitle.textContent = "Acessar Meu Currículo";
+                dom.signupFields.classList.add('hidden');
+                dom.btnLoginSubmit.classList.remove('hidden');
+                dom.btnSignUpSubmit.classList.add('hidden');
+                dom.loginToggleLink.textContent = "Não tem conta? Cadastre-se";
+            }
+            dom.loginError.textContent = '';
+        }
+
+        // ATUALIZADO: handleSignUp agora lê os novos campos
         function handleSignUp(e) {
             e.preventDefault();
             const email = dom.loginEmail.value;
             const password = dom.loginPassword.value;
-            dom.loginError.textContent = ''; // Limpa erros
+            const runner1Name = dom.signupRunner1Name.value;
+            const teamName = dom.signupTeamName.value;
+            
+            dom.loginError.textContent = ''; 
             
             if (password.length < 6) {
                 showLoginError("A senha deve ter pelo menos 6 caracteres.");
                 return;
             }
+            if (!runner1Name) {
+                showLoginError("O 'Seu nome' (Corredor 1) é obrigatório.");
+                return;
+            }
             
             auth.createUserWithEmailAndPassword(email, password)
                 .then((userCredential) => {
-                    // Usuário criado e logado automaticamente
                     const user = userCredential.user;
-                    const uid = user.uid;
-                    const defaultName = email.split('@')[0];
-
-                    // 1. Criar o perfil de usuário padrão
-                    const defaultProfile = {
-                        runner1Name: defaultName,
-                        runner2Name: "Corredor(a) 2",
-                        teamName: "Minha Equipe"
-                    };
-                    firebase.database().ref('/users/' + uid + '/profile').set(defaultProfile);
-
-                    // 2. Criar o perfil público padrão
-                    const defaultPublicProfile = {
-                        runner1Name: defaultName,
-                        runner2Name: "Corredor(a) 2",
-                        teamName: "Minha Equipe"
-                    };
-                    firebase.database().ref('/publicProfiles/' + uid).set(defaultPublicProfile);
                     
-                    // O 'onAuthStateChanged' cuidará de atualizar a UI
-                    console.log("Novo usuário cadastrado:", uid);
+                    // CRIA A SOLICITAÇÃO DE APROVAÇÃO com os nomes
+                    const pendingRef = firebase.database().ref('/pendingApprovals/' + user.uid);
+                    pendingRef.set({
+                        email: user.email,
+                        requestDate: new Date().toISOString(),
+                        runner1Name: runner1Name,
+                        runner2Name: dom.signupRunner2Name.value || "",
+                        teamName: teamName || ""
+                    });
+                    
+                    console.log("Novo usuário cadastrado e aguardando aprovação:", user.uid);
+                    dom.loginForm.reset();
+                    toggleLoginMode(false); // Volta para a tela de login
+                    showLoginError("Cadastro realizado! Aguardando aprovação do admin.");
                 })
                 .catch(err => {
                     console.error("Erro no cadastro:", err.code, err.message);
@@ -1407,14 +1712,11 @@
                 });
         }
 
-        /**
-         * Lida com o login de usuários existentes
-         */
         function handleSignIn(e) {
             e.preventDefault();
             const email = dom.loginEmail.value;
             const password = dom.loginPassword.value;
-            dom.loginError.textContent = ''; // Limpa erros
+            dom.loginError.textContent = ''; 
 
             auth.signInWithEmailAndPassword(email, password)
                 .catch(err => {
@@ -1428,6 +1730,11 @@
         }
 
         function signOut() {
+            firebase.database().ref('/pendingApprovals').off();
+            if(currentViewingUid) {
+                firebase.database().ref(`/users/${currentViewingUid}/profile`).off();
+                firebase.database().ref(`/users/${currentViewingUid}/races`).off();
+            }
             auth.signOut().catch(err => console.error("Erro no logout:", err));
         }
         
@@ -1457,45 +1764,43 @@
                 if(id) deleteRace(id);
             });
             
-            // Listeners de Autenticação (CORRIGIDOS)
+            // Listeners de Autenticação
             dom.btnLoginSubmit.addEventListener('click', handleSignIn);
             dom.btnSignUpSubmit.addEventListener('click', handleSignUp);
             dom.btnLogout.addEventListener('click', signOut);
+            
+            // NOVO: Listener do Botão Voltar
+            dom.btnBackToPublic.addEventListener('click', showLoggedOutView);
+            
+            // NOVO: Listener do Toggle Login/Cadastro
+            dom.loginToggleLink.addEventListener('click', () => {
+                // Se os campos de cadastro estão escondidos, mostre-os (modo cadastro)
+                const isSigningUp = dom.signupFields.classList.contains('hidden');
+                toggleLoginMode(isSigningUp);
+            });
+            
+            // Configuração inicial da UI de login
+            toggleLoginMode(false);
 
-            // Gerenciador Central de Estado de Autenticação
+            // Gerenciador Central de Estado de Autenticação (ROTEADOR PRINCIPAL)
             auth.onAuthStateChanged((user) => {
                 if (user) {
                     // --- USUÁRIO LOGADO ---
                     authUser = user;
+                    // UID ADMIN 
                     isAdmin = user.uid === '29d30W4RS1WzK4SWZRZ5pEFnOdm1'; 
                     
-                    dom.btnLogout.classList.remove('hidden');
-                    dom.userInfo.classList.remove('hidden');
-                    dom.userEmail.textContent = user.email;
-                    dom.controlsSection.classList.remove('hidden'); 
-                    
-                    dom.loginOrPublicView.classList.add('hidden');
-                    dom.userContent.classList.remove('hidden');
-
-                    loadProfile(user.uid);
-                    loadRaces(user.uid);
+                    firebase.database().ref('/users/' + user.uid).once('value', (snapshot) => {
+                        if (snapshot.exists() || isAdmin) {
+                            showUserDashboard(user);
+                        } else {
+                            showPendingView();
+                        }
+                    });
 
                 } else {
                     // --- USUÁRIO ANÔNIMO (LOGGED OUT) ---
-                    authUser = null;
-                    isAdmin = false;
-                    currentViewingUid = null;
-                    
-                    dom.btnLogout.classList.add('hidden');
-                    dom.userInfo.classList.add('hidden');
-                    dom.controlsSection.classList.add('hidden');
-                    
-                    dom.loginOrPublicView.classList.remove('hidden');
-                    dom.userContent.classList.add('hidden'); 
-                    dom.loginError.textContent = ''; // Limpa erros de login
-                    
-                    db = { races: {}, profile: {} };
-                    loadPublicView(); 
+                    showLoggedOutView();
                 }
             });
         });
