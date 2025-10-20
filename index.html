@@ -269,7 +269,7 @@
             font-size: 0.9em;
             color: #555;
             margin-left: 10px;
-            display: block; 
+            display: block; /* Mostra nomes abaixo do email */
         }
         
         .admin-buttons {
@@ -646,7 +646,7 @@
             width: 90%;
             max-width: 600px;
             padding: 0;
-            /* overflow: hidden; -> Esta linha foi removida */
+            /* overflow: hidden; -> Esta linha foi REMOVIDA */
             background: #2a2a3a;
             color: #f0f0f0;
             
@@ -661,6 +661,7 @@
             backdrop-filter: blur(5px);
         }
 
+        /* CORREÇÃO DE CSS V3.6: Impede que o header encolha */
         .modal-header {
             padding: 20px 30px;
             background: #1f2027;
@@ -668,7 +669,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-shrink: 0; /* Impede que o header encolha */
+            flex-shrink: 0; 
         }
 
         .modal-header h2 {
@@ -763,6 +764,7 @@
         }
 
 
+        /* CORREÇÃO DE CSS V3.6: Impede que o footer encolha */
         .modal-footer {
             padding: 20px 30px;
             background: #1f2027;
@@ -770,7 +772,7 @@
             display: flex;
             justify-content: flex-end;
             gap: 15px;
-            flex-shrink: 0; /* Impede que o footer encolha */
+            flex-shrink: 0;
         }
 
         .btn {
@@ -1812,7 +1814,7 @@
         
         function deleteUser(uid, name) {
             if (!isAdmin) return;
-            if (!confirm(`ATENÇÃO!\n\nTem certeza que deseja EXCLUIR PERMANENTEMENTE o usuário ${name}?\n\nTODOS os dados (perfil, corridas) serão apagados e não poderão ser recuperados.\n\n(Obs: O login do usuário ainda precisará ser excluído manualmente no painel do Firebase Authentication).`)) return;
+            if (!confirm(`ATENÇÃO!\n\nTem certeza que deseja EXCLUIR PERMANENTEMENTE o usuário ${name}?\n\TODOS os dados (perfil, corridas) serão apagados e não poderão ser recuperados.\n\n(Obs: O login do usuário ainda precisará ser excluído manualmente no painel do Firebase Authentication).`)) return;
             
             const updates = {};
             updates[`/users/${uid}`] = null; 
@@ -1963,7 +1965,7 @@
             
             toggleLoginMode(false);
 
-            // Gerenciador Central de Estado de Autenticação (ROTEADOR V3.5)
+            // Gerenciador Central de Estado de Autenticação (ROTEADOR V3.5 / V3.6)
             auth.onAuthStateChanged((user) => {
                 if (user) {
                     // --- USUÁRIO LOGADO ---
@@ -1985,13 +1987,11 @@
                                     showRejectedView(user.email);
                                 }
                             }, (error) => {
-                                // CORREÇÃO V3.6 ESTÁ AQUI:
-                                // Se a leitura de /pendingApprovals falhar, é porque as Regras de Segurança
-                                // da V3.5 (minha resposta anterior) estavam erradas.
-                                // A V3.6 (esta resposta) corrige as regras para permitir esta leitura.
+                                // (V3.6) Esta verificação é crucial. Se as regras estiverem erradas,
+                                // o usuário não-admin receberá PERMISSION_DENIED aqui.
                                 if(error.code === "PERMISSION_DENIED") {
                                     console.error("ERRO DE REGRAS: O usuário não-admin não tem permissão para ler /pendingApprovals. Verifique as Regras de Segurança (Fase 2).");
-                                    showLoggedOutView(); // Desloga o usuário para evitar loop
+                                    showLoggedOutView(); 
                                     alert("Erro de configuração do banco de dados. Contate o administrador.");
                                     auth.signOut();
                                 }
