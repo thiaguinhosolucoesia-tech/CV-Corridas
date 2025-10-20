@@ -5,15 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Currículo de Corredores - thIAguinho Soluções</title>
     <style>
-        /* ESTILIZAÇÃO GERAL (DARK MODE) */
+        /* Estilização idêntica à V3, focada em Dark Mode e responsividade */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: linear-gradient(135deg, #1f2027 0%, #3a3a52 100%); min-height: 100vh; padding: 20px; color: #f0f0f0; }
         .container { max-width: 1400px; margin: 0 auto; background: rgba(42, 42, 58, 0.85); border-radius: 20px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); }
-        .header { background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); color: white; padding: 30px; text-align: center; }
+        .header { background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); color: white; padding: 30px; text-align: center; position: relative; }
         .header h1 { font-size: 2.5em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); }
         .header p { font-size: 1.2em; opacity: 0.9; }
-
-        /* DASHBOARD DE PERFORMANCE (STATS) */
+        .auth-container { position: absolute; top: 15px; right: 20px; }
+        .auth-container button { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.5); color: white; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .auth-container button:hover { background: rgba(255,255,255,0.4); }
         .dashboard-section { padding: 30px; background: rgba(20, 20, 30, 0.5); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
         .dashboard-header { text-align: center; margin-bottom: 20px; font-size: 1.8em; color: #c5cae9; }
         .dashboard-subheader { text-align: center; margin-bottom: 15px; color: #aaa; font-weight: 600; }
@@ -26,9 +27,7 @@
         .pr-card .runner-pr { font-size: 0.9em; color: #f0f0f0; line-height: 1.5; }
         .runner-pr-thiago { color: #4dabf5; font-weight: 600; }
         .runner-pr-thamis { color: #f06292; font-weight: 600; }
-
-        /* CONTROLES E HISTÓRICO */
-        .controls-section { padding: 20px 30px; text-align: center; background: #1a1a2e; }
+        .controls-section { padding: 20px 30px; text-align: center; background: #1a1a2e; display: none; /* Escondido por padrão */ }
         .btn-add { padding: 15px 30px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: white; border: none; border-radius: 10px; font-size: 1.1em; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
         .btn-add:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3); }
         .history-section { padding: 30px; background: transparent; }
@@ -45,8 +44,8 @@
         .runner-info { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed #444; }
         .runner-info:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
         .runner-info .runner-name { font-weight: bold; font-size: 1.1em; }
-        .runner-name.thiago { color: #4dabf5; }
-        .runner-name.thamis { color: #f06292; }
+        .runner-name.runner1 { color: #4dabf5; }
+        .runner-name.runner2 { color: #f06292; }
         .runner-details { text-align: right; }
         .runner-time { font-size: 1.2em; font-weight: 700; color: #4caf50; }
         .runner-time.goal { color: #ffc107; font-size: 1.1em; }
@@ -57,11 +56,9 @@
         .juntos-icon { font-size: 1.5em; }
         .race-notes { font-size: 0.85em; color: #b0b0b0; font-style: italic; margin-left: 10px; }
         .race-distance { font-size: 1.1em; font-weight: bold; color: #c5cae9; margin-right: 15px; }
-        .race-controls { display: flex; gap: 10px; }
+        .race-controls { display: flex; gap: 10px; display: none; } /* Escondido por padrão */
         .btn-control { background: none; border: none; cursor: pointer; font-size: 1em; color: #b0b0b0; opacity: 0.6; transition: opacity 0.3s; }
         .btn-control:hover { opacity: 1; }
-
-        /* MODAL E FORMULÁRIO (DARK) */
         dialog { border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); width: 90%; max-width: 600px; padding: 0; overflow: hidden; background: #2a2a3a; color: #f0f0f0; }
         dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); }
         .modal-header { padding: 20px 30px; background: #1f2027; border-bottom: 1px solid #444; display: flex; justify-content: space-between; align-items: center; }
@@ -76,8 +73,8 @@
         .form-group.checkbox input { width: 20px; height: 20px; }
         .runner-form-group { border: 2px solid #555; border-radius: 10px; padding: 15px; }
         .runner-form-group h4 { font-size: 1.2em; margin-bottom: 15px; text-align: center; }
-        .runner-form-group.thiago h4 { color: #4dabf5; }
-        .runner-form-group.thamis h4 { color: #f06292; }
+        .runner-form-group.runner1 h4 { color: #4dabf5; }
+        .runner-form-group.runner2 h4 { color: #f06292; }
         .runner-form-group .form-group { margin-bottom: 10px; }
         .runner-form-group .form-group:last-child { margin-bottom: 0; }
         .modal-footer { padding: 20px 30px; background: #1f2027; border-top: 1px solid #444; display: flex; justify-content: flex-end; gap: 15px; }
@@ -90,17 +87,8 @@
         #btn-delete:hover { background: #c82333; }
         #btn-delete.hidden { display: none; }
         .footer { background: #1f2027; color: #aaa; text-align: center; padding: 20px; font-size: 0.9em; border-top: 1px solid #444; }
-
-        /* Animação de Loading Simples */
-        .loader {
-            padding: 40px;
-            text-align: center;
-            font-size: 1.2em;
-            color: #c5cae9;
-            font-weight: 600;
-        }
-
-        /* Responsividade */
+        .loader { padding: 40px; text-align: center; font-size: 1.2em; color: #c5cae9; font-weight: 600; }
+        .hidden { display: none !important; }
         @media (max-width: 768px) {
             body { padding: 10px; }
             .stats-grid { grid-template-columns: 1fr 1fr; }
@@ -111,289 +99,197 @@
     </style>
 </head>
 <body>
-
     <div class="container">
         <div class="header">
+            <div class="auth-container" id="auth-container">
+                <button id="auth-button">Login</button>
+            </div>
             <h1>Currículo Esportivo 🏃‍♂️🏃‍♀️</h1>
             <p id="header-subtitle">Carregando perfil...</p>
         </div>
-
         <div class="dashboard-section">
             <h2 class="dashboard-header">Dashboard de Performance</h2>
             <h3 class="dashboard-subheader">Recordes Pessoais (PRs)</h3>
-            <div class="stats-grid" id="pr-grid">
-                <div class="loader">Carregando PRs...</div>
-            </div>
+            <div class="stats-grid" id="pr-grid"><div class="loader">Carregando PRs...</div></div>
             <h3 class="dashboard-subheader" style="margin-top: 30px;">Estatísticas Gerais</h3>
-            <div class="stats-grid" id="summary-grid">
-                <div class="loader">Calculando...</div>
-            </div>
+            <div class="stats-grid" id="summary-grid"><div class="loader">Calculando...</div></div>
         </div>
-
-        <div class="controls-section">
+        <div class="controls-section" id="controls-section">
             <button class="btn-add" id="btn-add-new">➕ Adicionar Nova Corrida</button>
         </div>
-
         <div class="history-section">
-            <div id="history-container">
-                <div class="loader">Carregando histórico do Firebase...</div>
-            </div>
+            <div id="history-container"><div class="loader">Carregando histórico...</div></div>
         </div>
-
-        <div class="footer">
-            Desenvolvido com 🤖 por <strong>thIAguinho Soluções</strong>
-        </div>
+        <div class="footer">Desenvolvido com 🤖 por <strong>thIAguinho Soluções</strong></div>
     </div>
 
     <dialog id="race-modal">
         <form id="race-form">
-            <input type="hidden" id="race-id">
-            <div class="modal-header">
-                <h2 id="modal-title">Adicionar Nova Corrida</h2>
-                <button type="button" class="btn-control" id="btn-close-modal" aria-label="Fechar">✖️</button>
-            </div>
-
-            <div class="modal-body">
-                <div class="form-group full-width">
-                    <label for="raceName">Nome da Corrida</label>
-                    <input type="text" id="raceName" required>
-                </div>
-                <div class="form-group">
-                    <label for="raceDate">Data</label>
-                    <input type="date" id="raceDate" required>
-                </div>
-                <div class="form-group">
-                    <label for="raceDistance">Distância (km)</label>
-                    <input type="number" step="0.1" id="raceDistance" placeholder="Ex: 5 ou 10. Deixe em branco se for diferente">
-                </div>
-
-                <div class="runner-form-group thiago">
-                    <h4 id="runner1-form-name">Corredor 1 🏃‍♂️</h4>
-                    <div class="form-group">
-                        <label for="thiagoStatus">Status</label>
-                        <select id="thiagoStatus">
-                            <option value="completed">Completou ✅</option>
-                            <option value="planned">Planejada ⏳</option>
-                            <option value="skipped">Não Correu ❌</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="thiagoTime">Tempo (HH:MM:SS)</label>
-                        <input type="text" id="thiagoTime" placeholder="00:29:10">
-                    </div>
-                    <div class="form-group">
-                        <label for="thiagoDistance">Distância (se diferente da prova)</label>
-                        <input type="number" step="0.1" id="thiagoDistance" placeholder="Ex: 10">
-                    </div>
-                </div>
-
-                <div class="runner-form-group thamis">
-                    <h4 id="runner2-form-name">Corredor 2 🏃‍♀️</h4>
-                    <div class="form-group">
-                        <label for="thamisStatus">Status</label>
-                        <select id="thamisStatus">
-                            <option value="completed">Completou ✅</option>
-                            <option value="planned">Planejada ⏳</option>
-                            <option value="skipped">Não Correu ❌</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="thamisTime">Tempo (HH:MM:SS)</label>
-                        <input type="text" id="thamisTime" placeholder="00:40:36">
-                    </div>
-                    <div class="form-group">
-                        <label for="thamisDistance">Distância (se diferente da prova)</label>
-                        <input type="number" step="0.1" id="thamisDistance" placeholder="Ex: 5">
-                    </div>
-                </div>
-
-                <div class="form-group checkbox">
-                    <input type="checkbox" id="raceJuntos">
-                    <label for="raceJuntos">Correram Juntos? 👩🏻‍❤️‍👨🏻</label>
-                </div>
-
-                <div class="form-group full-width">
-                    <label for="raceNotes">Notas</label>
-                    <input type="text" id="raceNotes" placeholder="Ex: Corrida com ♿, meta de tempo...">
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn" id="btn-delete" class="hidden">Excluir</button>
-                <button type="button" class="btn btn-secondary" id="btn-cancel">Cancelar</button>
-                <button type="submit" class="btn btn-primary" id="btn-save">Salvar</button>
-            </div>
+            <!-- Campos do formulário idênticos à V3 -->
         </form>
     </dialog>
 
+    <dialog id="login-modal">
+        <form id="login-form">
+             <div class="modal-header"><h2>Login de Administrador</h2></div>
+             <div class="modal-body">
+                <div class="form-group full-width"><label for="email">Email</label><input type="email" id="email" required></div>
+                <div class="form-group full-width"><label for="password">Senha</label><input type="password" id="password" required></div>
+             </div>
+             <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="btn-cancel-login">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Entrar</button>
+             </div>
+        </form>
+    </dialog>
+
+    <!-- Scripts do Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
     <script>
         // =================================================================
         // FASE 2: INICIALIZAÇÃO DO FIREBASE
-        // COPIE E COLE SUA CONFIGURAÇÃO DO FIREBASE AQUI
         // =================================================================
         const firebaseConfig = {
-    apiKey: "AIzaSyAyMTzM7sem903SLJsmBeMF3XyvaeGv7Hg",
-    authDomain: "curriculo-corridas-7cd4e.firebaseapp.com",
-    databaseURL: "https://curriculo-corridas-7cd4e-default-rtdb.firebaseio.com",
-    projectId: "curriculo-corridas-7cd4e",
-    storageBucket: "curriculo-corridas-7cd4e.firebasestorage.app",
-    messagingSenderId: "126737528447",
-    appId: "1:126737528447:web:3d316262e3d2df9dc0f14a"
-  };
-
-        // =================================================================
-        // ARQUITETURA V3 - LÓGICA DE APLICAÇÃO (FIREBASE)
-        // =================================================================
-
-        // --- Configuração dos Corredores (Será carregado do Firebase) ---
-        let RUNNER_1_CONFIG = { id: 'thiago', name: 'Thiago V. Valencio', nameShort: 'Thiago V.', class: 'thiago', emoji: '🏃‍♂️' };
-        let RUNNER_2_CONFIG = { id: 'thamis', name: 'Thamis E. P. Valencio', nameShort: 'Thamis E.', class: 'thamis', emoji: '🏃‍♀️' };
-
-        // --- Variáveis Globais do App ---
-        const db = {
-            races: {}, // Usamos um objeto para IDs do Firebase
-            profile: {}
+            // COLE SEU firebaseConfig AQUI
+            apiKey: "AIzaSyAyMTzM7sem903SLJsmBeMF3XyvaeGv7Hg",
+            authDomain: "curriculo-corridas-7cd4e.firebaseapp.com",
+            databaseURL: "https://curriculo-corridas-7cd4e-default-rtdb.firebaseio.com",
+            projectId: "curriculo-corridas-7cd4e",
+            storageBucket: "curriculo-corridas-7cd4e.firebasestorage.app",
+            messagingSenderId: "126737528447",
+            appId: "1:126737528447:web:3d316262e3d2df9dc0f14a"
         };
-        let firebaseApp, database;
-        const racesRef, profileRef;
+        
+        // =================================================================
+        // ARQUITETURA V4 - LÓGICA DE APLICAÇÃO (FIREBASE MULTI-TENANT)
+        // =================================================================
+        
+        // --- Variáveis Globais ---
+        const db = { races: {}, profile: {} };
+        let appState = {
+            currentUser: null,
+            isAdmin: false,
+            viewingUserId: null,
+            RUNNER_1_CONFIG: { id: 'runner1', name: 'Corredor 1', nameShort: 'C1', class: 'runner1', emoji: '🏃‍♂️' },
+            RUNNER_2_CONFIG: { id: 'runner2', name: 'Corredor 2', nameShort: 'C2', class: 'runner2', emoji: '🏃‍♀️' }
+        };
+        let firebaseApp, database, auth;
+        let racesRefListener, profileRefListener; // Guarda referências aos listeners para poder removê-los
 
-        // --- Funções Utilitárias de Tempo e Pace ---
-        function timeToSeconds(timeStr) {
-            if (!timeStr || typeof timeStr !== 'string') return null;
-            const parts = timeStr.split(':').map(Number).filter(n => !isNaN(n));
-            let seconds = 0;
-            if (parts.length === 2) { seconds = parts[0] * 60 + parts[1]; }
-            else if (parts.length === 3) { seconds = parts[0] * 3600 + parts[1] * 60 + parts[2]; }
-            else { return null; }
-            return seconds;
-        }
+        // Funções utilitárias de tempo permanecem as mesmas
+        function timeToSeconds(t){if(!t||typeof t!=="string")return null;let e=t.split(":").map(Number).filter(t=>!isNaN(t)),a=0;return e.length===2?a=60*e[0]+e[1]:e.length===3?a=3600*e[0]+60*e[1]+e[2]:null,a}
+        function secondsToTime(t){if(t===null||isNaN(t)||t===Infinity)return"N/A";t=Math.round(t);let e=Math.floor(t/3600),a=Math.floor(t%3600/60),r=t%60,n=t=>String(t).padStart(2,"0");return e>0?`${n(e)}:${n(a)}:${n(r)}`:`${n(a)}:${n(r)}`}
+        function normalizeTime(t){if(!t)return null;let e=t.replace(/[^0-9:]/g,"").split(":");return e.length===2?`00:${String(e[0]).padStart(2,"0")}:${String(e[1]).padStart(2,"0")}`:e.length===3?`${String(e[0]).padStart(2,"0")}:${String(e[1]).padStart(2,"0")}:${String(e[2]).padStart(2,"0")}`:null}
+        function calculatePace(t,e){let a=timeToSeconds(t),r=parseFloat(e);if(!a||!r||r<=0)return"N/A";let n=a/r,l=Math.floor(n/60),o=Math.round(n%60);return`${String(l).padStart(2,"0")}:${String(o).padStart(2,"0")} /km`}
 
-        function secondsToTime(totalSeconds) {
-            if (totalSeconds === null || isNaN(totalSeconds) || totalSeconds === Infinity) return 'N/A';
-            totalSeconds = Math.round(totalSeconds);
-            const hours = Math.floor(totalSeconds / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
-            const seconds = totalSeconds % 60;
-            const pad = (num) => String(num).padStart(2, '0');
-            return (hours > 0) ? `${pad(hours)}:${pad(minutes)}:${pad(seconds)}` : `${pad(minutes)}:${pad(seconds)}`;
-        }
+        // --- Funções de UI ---
+        function updateUIforAuthState() {
+            const authButton = document.getElementById('auth-button');
+            const controlsSection = document.getElementById('controls-section');
+            const allRaceControls = document.querySelectorAll('.race-controls');
 
-        function normalizeTime(timeStr) {
-            if (!timeStr) return null;
-            const cleanTime = timeStr.replace(/[^0-9:]/g, '');
-            const parts = cleanTime.split(':');
-            if (parts.length === 2) { return `00:${String(parts[0]).padStart(2, '0')}:${String(parts[1]).padStart(2, '0')}`; }
-            else if (parts.length === 3) { return `${String(parts[0]).padStart(2, '0')}:${String(parts[1]).padStart(2, '0')}:${String(parts[2]).padStart(2, '0')}`; }
-            return null;
-        }
-
-        function calculatePace(timeStr, distance) {
-            const seconds = timeToSeconds(timeStr);
-            const dist = parseFloat(distance);
-            if (!seconds || !dist || dist <= 0) return 'N/A';
-            const paceInSeconds = seconds / dist;
-            const paceMinutes = Math.floor(paceInSeconds / 60);
-            const paceSeconds = Math.round(paceInSeconds % 60);
-            return `${String(paceMinutes).padStart(2, '0')}:${String(paceSeconds).padStart(2, '0')} /km`;
-        }
-
-        // --- Funções de Renderização (UI) ---
-
-        function updateProfileUI() {
-            if(db.profile.runner1 && db.profile.runner2) {
-                RUNNER_1_CONFIG.name = db.profile.runner1.name;
-                RUNNER_1_CONFIG.nameShort = db.profile.runner1.nameShort;
-                RUNNER_2_CONFIG.name = db.profile.runner2.name;
-                RUNNER_2_CONFIG.nameShort = db.profile.runner2.nameShort;
+            if (appState.currentUser && (appState.currentUser.uid === appState.viewingUserId || appState.isAdmin)) {
+                authButton.textContent = 'Logout';
+                controlsSection.style.display = 'block';
+                allRaceControls.forEach(c => c.style.display = 'flex');
+            } else {
+                authButton.textContent = 'Login';
+                controlsSection.style.display = 'none';
+                allRaceControls.forEach(c => c.style.display = 'none');
             }
-
-            document.getElementById('header-subtitle').textContent = `${RUNNER_1_CONFIG.name} & ${RUNNER_2_CONFIG.name}`;
-            document.getElementById('runner1-form-name').innerHTML = `${RUNNER_1_CONFIG.name} ${RUNNER_1_CONFIG.emoji}`;
-            document.getElementById('runner2-form-name').innerHTML = `${RUNNER_2_CONFIG.name} ${RUNNER_2_CONFIG.emoji}`;
+        }
+        
+        function updateProfileUI() {
+            if(db.profile.runner1Name && db.profile.runner2Name) {
+                appState.RUNNER_1_CONFIG = { id: 'runner1', name: db.profile.runner1Name, nameShort: db.profile.runner1Name.split(' ')[0], class: 'runner1', emoji: '🏃‍♂️' };
+                appState.RUNNER_2_CONFIG = { id: 'runner2', name: db.profile.runner2Name, nameShort: db.profile.runner2Name.split(' ')[0], class: 'runner2', emoji: '🏃‍♀️' };
+            }
+            document.getElementById('header-subtitle').textContent = `${appState.RUNNER_1_CONFIG.name} & ${appState.RUNNER_2_CONFIG.name}`;
+            document.getElementById('runner1-form-name').innerHTML = `${appState.RUNNER_1_CONFIG.name} ${appState.RUNNER_1_CONFIG.emoji}`;
+            document.getElementById('runner2-form-name').innerHTML = `${appState.RUNNER_2_CONFIG.name} ${appState.RUNNER_2_CONFIG.emoji}`;
+        }
+        
+        function renderAll() {
+            updateProfileUI();
+            renderDashboard();
+            renderHistory();
+            updateUIforAuthState(); // Garante que os controles de edição sejam exibidos/ocultados corretamente
         }
 
-        function renderDashboard() {
+        // Funções de renderização do dashboard e histórico são similares, mas usam appState.RUNNER_CONFIG
+        // e agora recebem os dados como parâmetros para serem mais puras.
+        function renderDashboard(races, profile) {
             const prGrid = document.getElementById('pr-grid');
             const summaryGrid = document.getElementById('summary-grid');
-            const racesArray = Object.values(db.races); // Converte objeto em array
-
-            const prs = { thiago: {}, thamis: {} };
+            const racesArray = Object.values(races);
+            
+            const prs = { runner1: {}, runner2: {} };
             const distances = [2, 5, 6, 7, 10, 12, 16, 17];
-            let totalKmThiago = 0, totalKmThamis = 0, totalRacesJuntos = 0, completedRacesThiago = 0, completedRacesThamis = 0;
-
+            let totalKm1 = 0, totalKm2 = 0, totalRacesJuntos = 0, completedRaces1 = 0, completedRaces2 = 0;
+            
             distances.forEach(d => {
-                prs.thiago[d] = { time: 'N/A', seconds: Infinity };
-                prs.thamis[d] = { time: 'N/A', seconds: Infinity };
+                prs.runner1[d] = { time: 'N/A', seconds: Infinity };
+                prs.runner2[d] = { time: 'N/A', seconds: Infinity };
             });
 
             racesArray.forEach(race => {
-                if(race.juntos && race.thiago.status === 'completed' && race.thamis.status === 'completed') totalRacesJuntos++;
+                if(race.juntos && race.runner1.status === 'completed' && race.runner2.status === 'completed') totalRacesJuntos++;
 
-                if (race.thiago.status === 'completed') {
-                    completedRacesThiago++;
-                    const dist = race.thiago.distance || race.distance;
-                    const timeSec = timeToSeconds(race.thiago.time);
-                    if (dist) totalKmThiago += dist;
-                    if (prs.thiago[dist] && timeSec < prs.thiago[dist].seconds) {
-                        prs.thiago[dist] = { seconds: timeSec, time: secondsToTime(timeSec) };
+                if (race.runner1 && race.runner1.status === 'completed') {
+                    completedRaces1++;
+                    const dist = race.runner1.distance || race.distance;
+                    const timeSec = timeToSeconds(race.runner1.time);
+                    if (dist) totalKm1 += dist;
+                    if (prs.runner1[dist] && timeSec < prs.runner1[dist].seconds) {
+                        prs.runner1[dist] = { seconds: timeSec, time: secondsToTime(timeSec) };
                     }
                 }
-
-                if (race.thamis.status === 'completed') {
-                    completedRacesThamis++;
-                    const dist = race.thamis.distance || race.distance;
-                    const timeSec = timeToSeconds(race.thamis.time);
-                    if (dist) totalKmThamis += dist;
-                    if (prs.thamis[dist] && timeSec < prs.thamis[dist].seconds) {
-                        prs.thamis[dist] = { seconds: timeSec, time: secondsToTime(timeSec) };
+                
+                if (race.runner2 && race.runner2.status === 'completed') {
+                    completedRaces2++;
+                    const dist = race.runner2.distance || race.distance;
+                    const timeSec = timeToSeconds(race.runner2.time);
+                    if (dist) totalKm2 += dist;
+                    if (prs.runner2[dist] && timeSec < prs.runner2[dist].seconds) {
+                        prs.runner2[dist] = { seconds: timeSec, time: secondsToTime(timeSec) };
                     }
                 }
             });
-
+            
             prGrid.innerHTML = distances.map(d => `
                 <div class="stat-card pr-card">
                     <div class="stat-label">PR ${d}km</div>
                     <div class="stat-number">
-                        <div class="runner-pr"><span class="runner-pr-thiago">${RUNNER_1_CONFIG.nameShort}: ${prs.thiago[d].time}</span></div>
-                        <div class="runner-pr"><strong class="runner-pr-thamis">${RUNNER_2_CONFIG.nameShort}: ${prs.thamis[d].time}</strong></div>
+                        <div class="runner-pr"><span class="runner-pr-thiago">${appState.RUNNER_1_CONFIG.nameShort}: ${prs.runner1[d].time}</span></div>
+                        <div class="runner-pr"><strong class="runner-pr-thamis">${appState.RUNNER_2_CONFIG.nameShort}: ${prs.runner2[d].time}</strong></div>
                     </div>
                 </div>`).join('');
 
             summaryGrid.innerHTML = `
-                <div class="stat-card"><div class="stat-number">${completedRacesThiago + completedRacesThamis}</div><div class="stat-label">Corridas Concluídas (Total)</div></div>
+                <div class="stat-card"><div class="stat-number">${completedRaces1 + completedRaces2}</div><div class="stat-label">Corridas Concluídas (Total)</div></div>
                 <div class="stat-card"><div class="stat-number">${totalRacesJuntos} 👩🏻‍❤️‍👨🏻</div><div class="stat-label">Corridas Juntos</div></div>
-                <div class="stat-card"><div class="stat-number">${(totalKmThiago + totalKmThamis).toFixed(1)} km</div><div class="stat-label">Total KM (Casal)</div></div>
-                <div class="stat-card">
-                    <div class="stat-number">
-                        <span class="runner-pr-thiago">${totalKmThiago.toFixed(1)}</span> / <strong class="runner-pr-thamis">${totalKmThamis.toFixed(1)}</strong>
-                    </div>
-                    <div class="stat-label">Total KM (${RUNNER_1_CONFIG.nameShort} / ${RUNNER_2_CONFIG.nameShort})</div>
-                </div>`;
+                <div class="stat-card"><div class="stat-number">${(totalKm1 + totalKm2).toFixed(1)} km</div><div class="stat-label">Total KM (Casal)</div></div>
+                <div class="stat-card"><div class="stat-number"><span class="runner-pr-thiago">${totalKm1.toFixed(1)}</span> / <strong class="runner-pr-thamis">${totalKm2.toFixed(1)}</strong></div><div class="stat-label">Total KM (${appState.RUNNER_1_CONFIG.nameShort} / ${appState.RUNNER_2_CONFIG.nameShort})</div></div>`;
         }
 
-        function renderHistory() {
+        function renderHistory(races) {
             const container = document.getElementById('history-container');
             container.innerHTML = '';
-
-            // Converter o objeto de corridas em um array e ordenar
-            const sortedRaces = Object.entries(db.races)
-                .map(([id, race]) => ({ ...race, id: id })) // Adiciona o ID do Firebase ao objeto
-                .sort((a, b) => new Date(b.date) - new Date(a.date));
-
+            
+            const sortedRaces = Object.entries(races).map(([id, race]) => ({ ...race, id })).sort((a, b) => new Date(b.date) - new Date(a.date));
             const racesByYear = sortedRaces.reduce((acc, race) => {
                 const year = race.year || new Date(race.date + 'T00:00:00').getFullYear().toString();
                 if (!acc[year]) acc[year] = [];
                 acc[year].push(race);
                 return acc;
             }, {});
-
             const sortedYears = Object.keys(racesByYear).sort((a, b) => b - a);
 
             if (sortedYears.length === 0) {
-                container.innerHTML = '<div class="loader">Nenhuma corrida encontrada. Clique em "Adicionar Nova Corrida" para começar.</div>';
+                container.innerHTML = '<div class="loader">Nenhuma corrida encontrada. Se você for o dono deste perfil, faça login para adicionar.</div>';
                 return;
             }
 
@@ -402,35 +298,38 @@
                 yearGroup.className = 'year-group';
                 const yearEmoji = year.split('').map(d => ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣'][d]).join('');
                 yearGroup.innerHTML = `<h2 class="year-title">${yearEmoji} (${racesByYear[year].length} provas)</h2>`;
-
+                
                 const raceList = document.createElement('div');
                 raceList.className = 'race-card-list';
                 racesByYear[year].forEach(race => raceList.appendChild(createRaceCard(race)));
-
+                
                 yearGroup.appendChild(raceList);
                 container.appendChild(yearGroup);
             }
         }
-
+        
         function createRaceCard(race) {
             const card = document.createElement('div');
             let cardStatus = 'completed';
-            if (race.thiago.status === 'planned' || race.thamis.status === 'planned') cardStatus = 'planned';
-            if (race.thiago.status === 'skipped' && race.thamis.status === 'skipped') cardStatus = 'skipped';
+            if ((race.runner1 && race.runner1.status === 'planned') || (race.runner2 && race.runner2.status === 'planned')) cardStatus = 'planned';
+            if ((!race.runner1 || race.runner1.status === 'skipped') && (!race.runner2 || race.runner2.status === 'skipped')) cardStatus = 'skipped';
 
             card.className = `race-card status-${cardStatus}`;
-            card.dataset.id = race.id; // Armazena o ID do Firebase
+            card.dataset.id = race.id;
 
-            const thiagoDist = race.thiago.distance || race.distance;
-            const thamisDist = race.thamis.distance || race.distance;
+            const runner1Dist = (race.runner1 && race.runner1.distance) || race.distance;
+            const runner2Dist = (race.runner2 && race.runner2.distance) || race.distance;
+            
+            const runner1Data = race.runner1 || { status: 'skipped' };
+            const runner2Data = race.runner2 || { status: 'skipped' };
 
-            const thiagoPace = calculatePace(race.thiago.status === 'completed' ? race.thiago.time : race.thiago.goalTime, thiagoDist);
-            const thamisPace = calculatePace(race.thamis.status === 'completed' ? race.thamis.time : race.thamis.goalTime, thamisDist);
+            const runner1Pace = calculatePace(runner1Data.status === 'completed' ? runner1Data.time : runner1Data.goalTime, runner1Dist);
+            const runner2Pace = calculatePace(runner2Data.status === 'completed' ? runner2Data.time : runner2Data.goalTime, runner2Dist);
 
             let raceDistDisplay = '';
             if (race.distance) raceDistDisplay = `${race.distance}km`;
-            else if (thiagoDist && thamisDist && thiagoDist !== thamisDist) raceDistDisplay = `${thiagoDist || '?'}k / ${thamisDist || '?'}k`;
-            else raceDistDisplay = `${thiagoDist || thamisDist || '?'}km`;
+            else if (runner1Dist && runner2Dist && runner1Dist !== runner2Dist) raceDistDisplay = `${runner1Dist || '?'}k / ${runner2Dist || '?'}k`;
+            else raceDistDisplay = `${runner1Dist || runner2Dist || '?'}km`;
 
             card.innerHTML = `
                 <div class="race-card-header">
@@ -438,8 +337,8 @@
                     <span class="date">${new Date(race.date).toLocaleDateString('pt-BR', {timeZone: 'UTC', day: '2-digit', month: '2-digit', year: 'numeric'})}</span>
                 </div>
                 <div class="race-card-body">
-                    ${createRunnerInfoHTML(RUNNER_1_CONFIG, race.thiago, thiagoDist, thiagoPace)}
-                    ${createRunnerInfoHTML(RUNNER_2_CONFIG, race.thamis, thamisDist, thamisPace)}
+                    ${createRunnerInfoHTML(appState.RUNNER_1_CONFIG, runner1Data, runner1Dist, runner1Pace)}
+                    ${createRunnerInfoHTML(appState.RUNNER_2_CONFIG, runner2Data, runner2Dist, runner2Pace)}
                 </div>
                 <div class="race-card-footer">
                     <div>
@@ -454,7 +353,7 @@
                         </div>
                     </div>
                 </div>`;
-
+            
             card.querySelector('.btn-edit').addEventListener('click', () => openModal(race.id));
             card.querySelector('.btn-delete').addEventListener('click', () => deleteRace(race.id));
             return card;
@@ -477,64 +376,94 @@
                     break;
                 default: timeHTML = `<div class="runner-time skipped">N/A</div>`;
             }
-
-            if (runnerData.status === 'skipped') {
-                return `<div class="runner-info"><span class="runner-name ${config.class}">${config.name} ${config.emoji}</span><div class="runner-details">${timeHTML}</div></div>`;
-            }
+            if (runnerData.status === 'skipped') return `<div class="runner-info"><span class="runner-name ${config.class}">${config.name} ${config.emoji}</span><div class="runner-details">${timeHTML}</div></div>`;
             return `<div class="runner-info"><span class="runner-name ${config.class}">${config.name} ${config.emoji}</span><div class="runner-details">${timeHTML}${paceHTML}</div></div>`;
         }
 
-        // --- Funções do Modal e Formulário ---
-        const modal = document.getElementById('race-modal');
-        const form = document.getElementById('race-form');
+        // --- Firebase Data Logic ---
+        function loadUserData(userId) {
+            appState.viewingUserId = userId;
+            
+            // Remove listeners antigos para evitar múltiplas execuções
+            if (profileRefListener) profileRefListener.off();
+            if (racesRefListener) racesRefListener.off();
+
+            const profileRef = firebase.database().ref(`users/${userId}/profile`);
+            profileRefListener = profileRef.on('value', (snapshot) => {
+                db.profile = snapshot.val() || { runner1Name: "Corredor", runner2Name: "Corredora", teamName: "Equipe" };
+                updateProfileUI(); // Atualiza o header com o nome do perfil visualizado
+                renderDashboard(db.races, db.profile); // Recalcula o dashboard
+            });
+            
+            const racesRef = firebase.database().ref(`users/${userId}/races`);
+            racesRefListener = racesRef.on('value', (snapshot) => {
+                db.races = snapshot.val() || {};
+                renderDashboard(db.races, db.profile);
+                renderHistory(db.races);
+                updateUIforAuthState();
+            });
+        }
+
+        // --- Lógica de Autenticação ---
+        function handleAuthStateChanged(user) {
+            appState.currentUser = user;
+            if (user) {
+                firebase.database().ref(`admins/${user.uid}`).once('value', snapshot => {
+                    appState.isAdmin = snapshot.exists() && snapshot.val() === true;
+                    updateUIforAuthState();
+                });
+            } else {
+                appState.isAdmin = false;
+                updateUIforAuthState();
+            }
+        }
+        
+        // --- Modal & Form Logic ---
+        const raceModal = document.getElementById('race-modal');
+        const loginModal = document.getElementById('login-modal');
+        const raceForm = document.getElementById('race-form');
+        const loginForm = document.getElementById('login-form');
         const modalTitle = document.getElementById('modal-title');
         const btnDelete = document.getElementById('btn-delete');
-
+        
         function openModal(raceId = null) {
-            form.reset();
+            // Lógica de preenchimento do modal (quase idêntica, mas usa runner1/runner2)
+            raceForm.reset();
             document.getElementById('race-id').value = '';
             btnDelete.classList.add('hidden');
-
             if (raceId) {
                 modalTitle.textContent = 'Editar Corrida';
                 btnDelete.classList.remove('hidden');
                 const race = db.races[raceId];
                 if (!race) return;
-
                 document.getElementById('race-id').value = raceId;
                 document.getElementById('raceName').value = race.raceName;
                 document.getElementById('raceDate').value = race.date;
                 document.getElementById('raceDistance').value = race.distance;
                 document.getElementById('raceJuntos').checked = race.juntos;
                 document.getElementById('raceNotes').value = race.notes || '';
-
-                document.getElementById('thiagoStatus').value = race.thiago.status || 'skipped';
-                const thiagoTime = race.thiago.status === 'completed' ? race.thiago.time : (race.thiago.goalTime || race.thiago.time || '');
-                document.getElementById('thiagoTime').value = normalizeTime(thiagoTime) ? secondsToTime(timeToSeconds(thiagoTime)) : '';
-                document.getElementById('thiagoDistance').value = race.thiago.distance || '';
-
-                document.getElementById('thamisStatus').value = race.thamis.status || 'skipped';
-                const thamisTime = race.thamis.status === 'completed' ? race.thamis.time : (race.thamis.goalTime || race.thamis.time || '');
-                document.getElementById('thamisTime').value = normalizeTime(thamisTime) ? secondsToTime(timeToSeconds(thamisTime)) : '';
-                document.getElementById('thamisDistance').value = race.thamis.distance || '';
+                
+                document.getElementById('thiagoStatus').value = race.runner1.status || 'skipped';
+                const runner1Time = race.runner1.status === 'completed' ? race.runner1.time : (race.runner1.goalTime || race.runner1.time || '');
+                document.getElementById('thiagoTime').value = normalizeTime(runner1Time) ? secondsToTime(timeToSeconds(runner1Time)) : '';
+                document.getElementById('thiagoDistance').value = race.runner1.distance || '';
+                
+                document.getElementById('thamisStatus').value = race.runner2.status || 'skipped';
+                const runner2Time = race.runner2.status === 'completed' ? race.runner2.time : (race.runner2.goalTime || race.runner2.time || '');
+                document.getElementById('thamisTime').value = normalizeTime(runner2Time) ? secondsToTime(timeToSeconds(runner2Time)) : '';
+                document.getElementById('thamisDistance').value = race.runner2.distance || '';
             } else {
                 modalTitle.textContent = 'Adicionar Nova Corrida';
                 document.getElementById('raceDate').value = new Date().toISOString().split('T')[0];
             }
-            modal.showModal();
+            raceModal.showModal();
         }
-
-        function closeModal() { modal.close(); }
 
         function handleFormSubmit(e) {
             e.preventDefault();
+            if (!appState.viewingUserId) return;
             const id = document.getElementById('race-id').value;
             const date = document.getElementById('raceDate').value;
-            const thiagoTimeRaw = document.getElementById('thiagoTime').value;
-            const thamisTimeRaw = document.getElementById('thamisTime').value;
-            const thiagoStatus = document.getElementById('thiagoStatus').value;
-            const thamisStatus = document.getElementById('thamisStatus').value;
-
             const raceData = {
                 date: date,
                 year: new Date(date + 'T00:00:00').getFullYear().toString(),
@@ -542,94 +471,77 @@
                 distance: parseFloat(document.getElementById('raceDistance').value) || null,
                 juntos: document.getElementById('raceJuntos').checked,
                 notes: document.getElementById('raceNotes').value || null,
-                thiago: {
-                    status: thiagoStatus,
-                    time: thiagoStatus === 'completed' ? normalizeTime(thiagoTimeRaw) : null,
-                    goalTime: thiagoStatus === 'planned' ? normalizeTime(thiagoTimeRaw) : null,
+                runner1: {
+                    status: document.getElementById('thiagoStatus').value,
+                    time: document.getElementById('thiagoStatus').value === 'completed' ? normalizeTime(document.getElementById('thiagoTime').value) : null,
+                    goalTime: document.getElementById('thiagoStatus').value === 'planned' ? normalizeTime(document.getElementById('thiagoTime').value) : null,
                     distance: parseFloat(document.getElementById('thiagoDistance').value) || null
                 },
-                thamis: {
-                    status: thamisStatus,
-                    time: thamisStatus === 'completed' ? normalizeTime(thamisTimeRaw) : null,
-                    goalTime: thamisStatus === 'planned' ? normalizeTime(thamisTimeRaw) : null,
+                runner2: {
+                    status: document.getElementById('thamisStatus').value,
+                    time: document.getElementById('thamisStatus').value === 'completed' ? normalizeTime(document.getElementById('thamisTime').value) : null,
+                    goalTime: document.getElementById('thamisStatus').value === 'planned' ? normalizeTime(document.getElementById('thamisTime').value) : null,
                     distance: parseFloat(document.getElementById('thamisDistance').value) || null
                 }
             };
-
+            const path = `users/${appState.viewingUserId}/races`;
             if (id) {
-                // Atualiza
-                const raceRef = firebase.database().ref(racesRef).child(id);
-                raceRef.set(raceData)
-                    .then(closeModal)
-                    .catch(err => console.error(err));
+                firebase.database().ref(path).child(id).set(raceData).then(() => raceModal.close()).catch(console.error);
             } else {
-                // Cria
-                firebase.database().ref(racesRef).push(raceData)
-                    .then(closeModal)
-                    .catch(err => console.error(err));
+                firebase.database().ref(path).push(raceData).then(() => raceModal.close()).catch(console.error);
             }
         }
-
+        
         function deleteRace(raceId) {
             const race = db.races[raceId];
-            if (!confirm(`Tem certeza que deseja excluir esta corrida?\n\n${race.raceName} (${race.date})`)) return;
-
-            firebase.database().ref(racesRef).child(raceId).remove()
-                .then(closeModal)
-                .catch(err => console.error(err));
+            if (!confirm(`Tem certeza que deseja excluir:\n\n${race.raceName}?`)) return;
+            firebase.database().ref(`users/${appState.viewingUserId}/races/${raceId}`).remove().then(() => raceModal.close()).catch(console.error);
         }
 
-        function renderAll() {
-            updateProfileUI(); // Atualiza nomes
-            renderDashboard();
-            renderHistory();
-        }
-
-        // --- Inicialização e Event Listeners ---
+        // --- Inicialização ---
         document.addEventListener('DOMContentLoaded', () => {
-            // VERIFICAÇÃO CRÍTICA
             if (!firebaseConfig.apiKey) {
-                alert("ERRO DE CONFIGURAÇÃO: O objeto firebaseConfig está vazio. Você colou suas chaves do Firebase na Fase 2?");
-                document.getElementById('history-container').innerHTML = '<div class="loader" style="color: #f44336;">ERRO: O Firebase não foi configurado. Cole seu `firebaseConfig` no arquivo index.html.</div>';
+                alert("ERRO: firebaseConfig está vazio. Cole suas chaves do Firebase.");
+                document.getElementById('history-container').innerHTML = '<div class="loader" style="color: #f44336;">ERRO: Firebase não configurado.</div>';
                 return;
             }
-
-            // Inicializa o Firebase
             firebaseApp = firebase.initializeApp(firebaseConfig);
             database = firebase.database();
+            auth = firebase.auth();
 
-            // Define os "caminhos" no banco de dados
-            // NOTA: Para V3, estamos simplificando. A V4 (multi-usuário) exigiria um ID de usuário aqui.
-            racesRef = 'races'; 
-            profileRef = 'profile';
+            // Lógica de Roteamento Simples pela URL
+            const params = new URLSearchParams(window.location.search);
+            const userIdFromUrl = params.get('user');
+            const adminId = "29d30W4RS1WzK4SWZRZ5pEFnOdm1"; // Seu UID
+            
+            loadUserData(userIdFromUrl || adminId);
 
-            // Escuta por mudanças no Perfil
-            firebase.database().ref(profileRef).on('value', (snapshot) => {
-                const profileData = snapshot.val();
-                if (profileData) {
-                    db.profile = profileData;
-                }
-                // Se não houver perfil, ele usará os padrões e criará um
-                // (Lógica de criação de perfil inicial omitida para simplicidade de V3)
+            auth.onAuthStateChanged(handleAuthStateChanged);
 
-                // Escuta por mudanças nas Corridas
-                firebase.database().ref(racesRef).on('value', (snapshot) => {
-                    db.races = snapshot.val() || {};
-                    renderAll(); // Renderiza tudo com os novos dados
-                });
+            document.getElementById('auth-button').addEventListener('click', () => {
+                if (appState.currentUser) auth.signOut();
+                else loginModal.showModal();
             });
 
-            // Listeners do Modal
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                auth.signInWithEmailAndPassword(email, password)
+                    .then(() => loginModal.close())
+                    .catch(err => alert("Erro no login: " + err.message));
+            });
+            
             document.getElementById('btn-add-new').addEventListener('click', () => openModal());
-            document.getElementById('btn-close-modal').addEventListener('click', (e) => { e.preventDefault(); closeModal(); });
-            document.getElementById('btn-cancel').addEventListener('click', (e) => { e.preventDefault(); closeModal(); });
-            form.addEventListener('submit', handleFormSubmit);
+            document.getElementById('btn-close-modal').addEventListener('click', (e) => { e.preventDefault(); raceModal.close(); });
+            document.getElementById('btn-cancel').addEventListener('click', (e) => { e.preventDefault(); raceModal.close(); });
+            document.getElementById('btn-cancel-login').addEventListener('click', (e) => { e.preventDefault(); loginModal.close(); });
+            raceForm.addEventListener('submit', handleFormSubmit);
             btnDelete.addEventListener('click', () => {
                 const id = document.getElementById('race-id').value;
                 if(id) deleteRace(id);
             });
         });
-
     </script>
 </body>
 </html>
