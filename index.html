@@ -81,7 +81,6 @@
             background: rgba(255, 255, 255, 0.3);
         }
 
-        /* NOVO: Botão Voltar */
         #btn-back-to-public {
             position: absolute;
             top: 15px;
@@ -114,25 +113,29 @@
         }
         
         /* ================================================= */
-        /* TELA DE LOGIN / PENDENTE                          */
+        /* TELA DE LOGIN / PENDENTE / RECUSADO                */
         /* ================================================= */
-        #login-view, #pending-approval-view {
+        #login-view, #pending-approval-view, #rejected-view {
             padding: 40px 30px;
             background: #1a1a2e;
             text-align: center;
         }
         
-        #pending-approval-view {
+        #pending-approval-view, #rejected-view {
              padding: 60px 30px;
         }
         
-        #pending-approval-view h2 {
+        #pending-approval-view h2, #rejected-view h2 {
             color: #ffc107; /* Amarelo Atenção */
             font-size: 1.8em;
             margin-bottom: 15px;
         }
         
-        #pending-approval-view p {
+        #rejected-view h2 {
+             color: #dc3545; /* Vermelho Recusado */
+        }
+        
+        #pending-approval-view p, #rejected-view p {
             font-size: 1.1em;
             color: #b0b0b0;
             max-width: 500px;
@@ -167,7 +170,6 @@
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
         }
         
-        /* NOVOS CAMPOS DE CADASTRO */
         #signup-fields {
             border: 1px dashed #555;
             padding: 20px;
@@ -226,7 +228,17 @@
             font-size: 1.5em;
         }
         
-        #pending-list {
+        #admin-panel h3 {
+            text-align: center;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            color: #5f4c00;
+            border-bottom: 1px solid rgba(0,0,0,0.2);
+            padding-bottom: 5px;
+        }
+        
+        #pending-list, #approved-list {
             display: grid;
             grid-template-columns: 1fr;
             gap: 10px;
@@ -234,7 +246,7 @@
             margin: 0 auto;
         }
         
-        .pending-item {
+        .pending-item, .approved-item {
             background: #fff;
             padding: 15px;
             border-radius: 10px;
@@ -244,16 +256,21 @@
             box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
         }
         
-        .pending-item-info {
+        .pending-item-info, .approved-item-info {
             font-weight: 600;
         }
         
-        .pending-item-info span {
+        .pending-item-info span, .approved-item-info span {
             font-weight: normal;
             font-size: 0.9em;
             color: #555;
             margin-left: 10px;
             display: block; /* Mostra nomes abaixo do email */
+        }
+        
+        .admin-buttons {
+            display: flex;
+            gap: 10px;
         }
         
         .btn-approve {
@@ -266,9 +283,22 @@
             cursor: pointer;
             transition: background 0.3s;
         }
-        
         .btn-approve:hover {
             background: #218838;
+        }
+        
+        .btn-reject, .btn-delete-user {
+            padding: 8px 15px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .btn-reject:hover, .btn-delete-user:hover {
+            background: #c82333;
         }
 
         /* ================================================= */
@@ -800,7 +830,6 @@
                 max-width: 100%;
             }
             
-            /* Novo: Botão Voltar responsivo */
             #btn-back-to-public {
                 top: 15px;
                 left: 10px;
@@ -847,9 +876,16 @@
         </div>
         
         <div id="admin-panel" class="hidden">
-            <h2>⚙️ Painel de Admin: Aprovações Pendentes</h2>
+            <h2>⚙️ Painel de Admin</h2>
+            
+            <h3>Aprovações Pendentes</h3>
             <div id="pending-list">
                 <div class="loader" style="color:#1f2027;">Carregando...</div>
+            </div>
+            
+            <h3>Usuários Aprovados</h3>
+            <div id="approved-list">
+                 <div class="loader" style="color:#1f2027;">Carregando...</div>
             </div>
         </div>
 
@@ -888,6 +924,11 @@
         <div id="pending-approval-view" class="hidden">
             <h2>⏳ Cadastro Recebido</h2>
             <p>Sua conta foi criada com sucesso e está aguardando a aprovação do administrador. Você será liberado em breve.</p>
+        </div>
+        
+        <div id="rejected-view" class="hidden">
+            <h2>❌ Acesso Recusado</h2>
+            <p>O cadastro para o e-mail <b id="rejected-email"></b> não foi aprovado pelo administrador. Entre em contato para mais informações.</p>
         </div>
 
         <div id="user-content" class="hidden">
@@ -1006,7 +1047,7 @@
 
     <script>
         // =================================================================
-        // ARQUITETURA V3.4 - INICIALIZAÇÃO DO FIREBASE (COM SUAS CHAVES)
+        // ARQUITETURA V3.5 - INICIALIZAÇÃO DO FIREBASE (COM SUAS CHAVES)
         // =================================================================
         const firebaseConfig = {
           apiKey: "AIzaSyAyMTzM7sem903SLJsmBeMF3XyvaeGv7Hg",
@@ -1019,7 +1060,7 @@
         };
         
         // =================================================================
-        // ARQUITETURA V3.4 - LÓGICA (ADMIN APPROVAL + SIGNUP FIELDS)
+        // ARQUITETURA V3.5 - LÓGICA (REJEITAR/EXCLUIR USUÁRIO)
         // =================================================================
 
         // --- Variáveis Globais do App ---
@@ -1033,7 +1074,6 @@
         let currentViewingUid = null; 
         let isAdmin = false; 
         
-        // Chaves de dados estáticas para corresponder ao seu JSON
         const RUNNER_1_KEY = "runner1";
         const RUNNER_2_KEY = "runner2";
         
@@ -1043,7 +1083,7 @@
         // --- Cache de Elementos DOM ---
         const dom = {
             btnLogout: document.getElementById('btn-logout'),
-            btnBackToPublic: document.getElementById('btn-back-to-public'), // NOVO
+            btnBackToPublic: document.getElementById('btn-back-to-public'), 
             userInfo: document.getElementById('user-info'),
             userEmail: document.getElementById('user-email'),
             loginOrPublicView: document.getElementById('login-or-public-view'),
@@ -1052,14 +1092,14 @@
             loginEmail: document.getElementById('login-email'),
             loginPassword: document.getElementById('login-password'),
             loginError: document.getElementById('login-error'),
-            loginTitle: document.getElementById('login-title'), // NOVO
+            loginTitle: document.getElementById('login-title'), 
             btnLoginSubmit: document.getElementById('btn-login-submit'),
             btnSignUpSubmit: document.getElementById('btn-signup-submit'), 
-            loginToggleLink: document.getElementById('login-toggle-link'), // NOVO
-            signupFields: document.getElementById('signup-fields'), // NOVO
-            signupRunner1Name: document.getElementById('signup-runner1-name'), // NOVO
-            signupRunner2Name: document.getElementById('signup-runner2-name'), // NOVO
-            signupTeamName: document.getElementById('signup-team-name'), // NOVO
+            loginToggleLink: document.getElementById('login-toggle-link'), 
+            signupFields: document.getElementById('signup-fields'), 
+            signupRunner1Name: document.getElementById('signup-runner1-name'), 
+            signupRunner2Name: document.getElementById('signup-runner2-name'), 
+            signupTeamName: document.getElementById('signup-team-name'), 
             publicView: document.getElementById('public-view'),
             publicProfileList: document.getElementById('public-profile-list'),
             userContent: document.getElementById('user-content'),
@@ -1079,7 +1119,10 @@
             runner2FormGroup: document.getElementById('runner2-form-group'),
             adminPanel: document.getElementById('admin-panel'),
             pendingList: document.getElementById('pending-list'),
-            pendingApprovalView: document.getElementById('pending-approval-view')
+            approvedList: document.getElementById('approved-list'), // NOVO
+            pendingApprovalView: document.getElementById('pending-approval-view'),
+            rejectedView: document.getElementById('rejected-view'), // NOVO
+            rejectedEmail: document.getElementById('rejected-email') // NOVO
         };
 
         // --- Funções Utilitárias de Tempo e Pace ---
@@ -1126,11 +1169,9 @@
 
         function updateProfileUI() {
             const profile = db.profile;
-            // Define perfis padrão
             RUNNER_1_PROFILE = { name: 'Corredor 1', nameShort: 'Corredor 1', emoji: '🏃‍♂️' };
             RUNNER_2_PROFILE = { name: 'Corredora 2', nameShort: 'Corredora 2', emoji: '🏃‍♀️' };
             
-            // Sobrescreve com dados do DB se existirem
             if (profile && profile.runner1Name) {
                 RUNNER_1_PROFILE = { name: profile.runner1Name, nameShort: profile.runner1Name.split(' ')[0] || "Corredor", emoji: '🏃‍♂️' };
             }
@@ -1138,7 +1179,7 @@
                  RUNNER_2_PROFILE = { name: profile.runner2Name, nameShort: profile.runner2Name.split(' ')[0] || "Corredora", emoji: '🏃‍♀️' };
             }
 
-            dom.headerSubtitle.textContent = `${RUNNER_1_PROFILE.name} & ${RUNNER_2_PROFILE.name}`;
+            dom.headerSubtitle.textContent = `${RUNNER_1_PROFILE.name} ${RUNNER_2_PROFILE.name ? '& ' + RUNNER_2_PROFILE.name : ''}`;
             dom.runner1FormGroup.querySelector('h4').innerHTML = `${RUNNER_1_PROFILE.name} ${RUNNER_1_PROFILE.emoji}`;
             dom.runner2FormGroup.querySelector('h4').innerHTML = `${RUNNER_2_PROFILE.name} ${RUNNER_2_PROFILE.emoji}`;
         }
@@ -1159,25 +1200,24 @@
                 const runner1Data = race[RUNNER_1_KEY]; 
                 const runner2Data = race[RUNNER_2_KEY];
                 
-                if(!runner1Data && !runner2Data) return; 
-                if(race.juntos && runner1Data.status === 'completed' && runner2Data.status === 'completed') totalRacesJuntos++;
+                if (race.juntos && runner1Data && runner1Data.status === 'completed' && runner2Data && runner2Data.status === 'completed') totalRacesJuntos++;
 
                 if (runner1Data && runner1Data.status === 'completed') {
                     completedRacesRunner1++;
-                    const dist = runner1Data.distance || race.distance;
+                    const dist = parseFloat(runner1Data.distance || race.distance);
                     const timeSec = timeToSeconds(runner1Data.time);
-                    if (dist) totalKmRunner1 += parseFloat(dist);
-                    if (prs.runner1[dist] && timeSec < prs.runner1[dist].seconds) {
+                    if (dist) totalKmRunner1 += dist;
+                    if (dist && prs.runner1[dist] && timeSec < prs.runner1[dist].seconds) {
                         prs.runner1[dist] = { seconds: timeSec, time: secondsToTime(timeSec) };
                     }
                 }
 
                 if (runner2Data && runner2Data.status === 'completed') {
                     completedRacesRunner2++;
-                    const dist = runner2Data.distance || race.distance;
+                    const dist = parseFloat(runner2Data.distance || race.distance);
                     const timeSec = timeToSeconds(runner2Data.time);
-                    if (dist) totalKmRunner2 += parseFloat(dist);
-                    if (prs.runner2[dist] && timeSec < prs.runner2[dist].seconds) {
+                    if (dist) totalKmRunner2 += dist;
+                    if (dist && prs.runner2[dist] && timeSec < prs.runner2[dist].seconds) {
                         prs.runner2[dist] = { seconds: timeSec, time: secondsToTime(timeSec) };
                     }
                 }
@@ -1244,23 +1284,27 @@
             const runner1Data = race[RUNNER_1_KEY];
             const runner2Data = race[RUNNER_2_KEY];
             
-            if (!runner1Data || !runner2Data) {
-                console.warn("Dados da corrida incompletos:", race);
+            if (!runner1Data) {
+                console.warn("Dados da corrida incompletos (Falta Runner 1):", race);
                 return card; 
             }
-
+            
             let cardStatus = 'completed';
-            if (runner1Data.status === 'planned' || runner2Data.status === 'planned') cardStatus = 'planned';
-            if (runner1Data.status === 'skipped' && runner2Data.status === 'skipped') cardStatus = 'skipped';
+            if (runner1Data.status === 'planned' || (runner2Data && runner2Data.status === 'planned')) cardStatus = 'planned';
+            if (runner1Data.status === 'skipped' && (!runner2Data || runner2Data.status === 'skipped')) cardStatus = 'skipped';
 
             card.className = `race-card status-${cardStatus}`;
             card.dataset.id = race.id;
 
             const runner1Dist = runner1Data.distance || race.distance;
-            const runner2Dist = runner2Data.distance || race.distance;
-
             const runner1Pace = calculatePace(runner1Data.status === 'completed' ? runner1Data.time : runner1Data.goalTime, runner1Dist);
-            const runner2Pace = calculatePace(runner2Data.status === 'completed' ? runner2Data.time : runner2Data.goalTime, runner2Dist);
+            
+            let runner2Dist = null;
+            let runner2Pace = null;
+            if(runner2Data) {
+                runner2Dist = runner2Data.distance || race.distance;
+                runner2Pace = calculatePace(runner2Data.status === 'completed' ? runner2Data.time : runner2Data.goalTime, runner2Dist);
+            }
 
             let raceDistDisplay = '';
             if (race.distance) raceDistDisplay = `${race.distance}km`;
@@ -1276,7 +1320,7 @@
                 </div>
                 <div class="race-card-body">
                     ${createRunnerInfoHTML(RUNNER_1_PROFILE, runner1Data, runner1Dist, runner1Pace, 'runner1')}
-                    ${createRunnerInfoHTML(RUNNER_2_PROFILE, runner2Data, runner2Dist, runner2Pace, 'runner2')}
+                    ${runner2Data ? createRunnerInfoHTML(RUNNER_2_PROFILE, runner2Data, runner2Dist, runner2Pace, 'runner2') : ''}
                 </div>
                 <div class="race-card-footer">
                     <div>
@@ -1350,15 +1394,20 @@
                 const runner1Data = race[RUNNER_1_KEY];
                 const runner2Data = race[RUNNER_2_KEY];
 
-                document.getElementById('runner1Status').value = runner1Data.status || 'skipped';
-                const runner1Time = runner1Data.status === 'completed' ? runner1Data.time : (runner1Data.goalTime || runner1Data.time || '');
-                document.getElementById('runner1Time').value = normalizeTime(runner1Time) ? secondsToTime(timeToSeconds(runner1Time)) : '';
-                document.getElementById('runner1Distance').value = runner1Data.distance || '';
+                if(runner1Data){
+                    document.getElementById('runner1Status').value = runner1Data.status || 'skipped';
+                    const runner1Time = runner1Data.status === 'completed' ? runner1Data.time : (runner1Data.goalTime || runner1Data.time || '');
+                    document.getElementById('runner1Time').value = normalizeTime(runner1Time) ? secondsToTime(timeToSeconds(runner1Time)) : '';
+                    document.getElementById('runner1Distance').value = runner1Data.distance || '';
+                }
+                
+                if(runner2Data){
+                    document.getElementById('runner2Status').value = runner2Data.status || 'skipped';
+                    const runner2Time = runner2Data.status === 'completed' ? runner2Data.time : (runner2Data.goalTime || runner2Data.time || '');
+                    document.getElementById('runner2Time').value = normalizeTime(runner2Time) ? secondsToTime(timeToSeconds(runner2Time)) : '';
+                    document.getElementById('runner2Distance').value = runner2Data.distance || '';
+                }
 
-                document.getElementById('runner2Status').value = runner2Data.status || 'skipped';
-                const runner2Time = runner2Data.status === 'completed' ? runner2Data.time : (runner2Data.goalTime || runner2Data.time || '');
-                document.getElementById('runner2Time').value = normalizeTime(runner2Time) ? secondsToTime(timeToSeconds(runner2Time)) : '';
-                document.getElementById('runner2Distance').value = runner2Data.distance || '';
             } else {
                 dom.modalTitle.textContent = 'Adicionar Nova Corrida';
                 document.getElementById('raceDate').value = new Date().toISOString().split('T')[0];
@@ -1493,7 +1542,7 @@
                         card.addEventListener('click', () => {
                             dom.loginOrPublicView.classList.add('hidden');
                             dom.userContent.classList.remove('hidden');
-                            dom.btnBackToPublic.classList.remove('hidden'); // MOSTRA o botão voltar
+                            dom.btnBackToPublic.classList.remove('hidden'); 
                             loadProfile(uid); 
                             loadRaces(uid);
                         });
@@ -1513,17 +1562,19 @@
             currentViewingUid = null;
             
             dom.btnLogout.classList.add('hidden');
-            dom.btnBackToPublic.classList.add('hidden'); // Esconde o botão voltar
+            dom.btnBackToPublic.classList.add('hidden'); 
             dom.userInfo.classList.add('hidden');
             dom.controlsSection.classList.add('hidden');
             dom.adminPanel.classList.add('hidden');
             dom.pendingApprovalView.classList.add('hidden');
+            dom.rejectedView.classList.add('hidden'); // NOVO
             
             dom.loginOrPublicView.classList.remove('hidden');
-            dom.publicView.classList.remove('hidden'); // Garante que a lista pública apareça
+            dom.publicView.classList.remove('hidden'); 
             dom.userContent.classList.add('hidden'); 
             dom.loginError.textContent = '';
             dom.loginForm.reset();
+            toggleLoginMode(false); // Garante que está na tela de login
             
             db = { races: {}, profile: {} };
             loadPublicView(); 
@@ -1538,8 +1589,25 @@
             dom.userContent.classList.add('hidden');
             dom.adminPanel.classList.add('hidden');
             dom.btnBackToPublic.classList.add('hidden');
+            dom.rejectedView.classList.add('hidden');
             
             dom.pendingApprovalView.classList.remove('hidden'); 
+        }
+        
+        // NOVA FUNÇÃO
+        function showRejectedView(email) {
+            dom.btnLogout.classList.remove('hidden'); 
+            dom.userInfo.classList.remove('hidden');
+            dom.userEmail.textContent = email;
+            
+            dom.loginOrPublicView.classList.add('hidden');
+            dom.userContent.classList.add('hidden');
+            dom.adminPanel.classList.add('hidden');
+            dom.btnBackToPublic.classList.add('hidden');
+            dom.pendingApprovalView.classList.add('hidden');
+            
+            dom.rejectedEmail.textContent = email;
+            dom.rejectedView.classList.remove('hidden'); 
         }
         
         function showUserDashboard(user) {
@@ -1550,7 +1618,8 @@
             
             dom.loginOrPublicView.classList.add('hidden');
             dom.pendingApprovalView.classList.add('hidden');
-            dom.btnBackToPublic.classList.add('hidden'); // Esconde o botão voltar no dashboard pessoal
+            dom.rejectedView.classList.add('hidden');
+            dom.btnBackToPublic.classList.add('hidden'); 
             
             dom.userContent.classList.remove('hidden');
 
@@ -1565,12 +1634,16 @@
             }
         }
         
-        // --- FUNÇÕES DE ADMIN (ATUALIZADAS) ---
+        // --- FUNÇÕES DE ADMIN (ATUALIZADAS V3.5) ---
         
         function loadAdminPanel() {
             dom.adminPanel.classList.remove('hidden');
+            loadPendingList();
+            loadApprovedUsersList(); // NOVO
+        }
+
+        function loadPendingList() {
             const pendingRef = firebase.database().ref('/pendingApprovals');
-            
             pendingRef.on('value', (snapshot) => {
                 const requests = snapshot.val();
                 if (!requests) {
@@ -1587,37 +1660,85 @@
                             ${request.email}
                             <span>${request.runner1Name} ${request.runner2Name ? '& ' + request.runner2Name : ''} (${request.teamName || 'Sem Equipe'})</span>
                         </div>
-                        <button class="btn-approve" 
-                            data-uid="${uid}" 
-                            data-r1="${request.runner1Name}" 
-                            data-r2="${request.runner2Name || ''}" 
-                            data-team="${request.teamName || ''}">
-                            Aprovar
-                        </button>
+                        <div class="admin-buttons">
+                            <button class="btn-approve" 
+                                data-uid="${uid}" 
+                                data-r1="${request.runner1Name}" 
+                                data-r2="${request.runner2Name || ''}" 
+                                data-team="${request.teamName || ''}">
+                                Aprovar
+                            </button>
+                            <button class="btn-reject" data-uid="${uid}" data-email="${request.email}">Recusar</button>
+                        </div>
                     `;
                     dom.pendingList.appendChild(item);
                 });
                 
+                // Listeners de Aprovação
                 dom.pendingList.querySelectorAll('.btn-approve').forEach(button => {
                     button.addEventListener('click', (e) => {
                         const data = e.target.dataset;
                         approveUser(data.uid, data.r1, data.r2, data.team);
                     });
                 });
+                
+                // Listeners de Recusa (NOVO)
+                dom.pendingList.querySelectorAll('.btn-reject').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const data = e.target.dataset;
+                        rejectUser(data.uid, data.email);
+                    });
+                });
             });
         }
         
+        // NOVA FUNÇÃO
+        function loadApprovedUsersList() {
+            const publicProfilesRef = firebase.database().ref('/publicProfiles');
+            publicProfilesRef.on('value', (snapshot) => {
+                const profiles = snapshot.val();
+                dom.approvedList.innerHTML = ''; // Limpa a lista
+                if (!profiles) {
+                    dom.approvedList.innerHTML = '<div class="loader" style="color:#1f2027; padding: 10px;">Nenhum usuário aprovado.</div>';
+                    return;
+                }
+                
+                Object.entries(profiles).forEach(([uid, profile]) => {
+                    // O Admin não pode excluir a si mesmo
+                    if (uid === authUser.uid) return; 
+                    
+                    const item = document.createElement('div');
+                    item.className = 'approved-item';
+                    item.innerHTML = `
+                        <div class="approved-item-info">
+                            ${profile.runner1Name} ${profile.runner2Name ? '& ' + profile.runner2Name : ''}
+                            <span>Equipe: ${profile.teamName || 'N/A'}</span>
+                        </div>
+                        <div class="admin-buttons">
+                            <button class="btn-delete-user" data-uid="${uid}" data-name="${profile.runner1Name}">Excluir</button>
+                        </div>
+                    `;
+                    dom.approvedList.appendChild(item);
+                });
+
+                // Listeners de Exclusão
+                dom.approvedList.querySelectorAll('.btn-delete-user').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const data = e.target.dataset;
+                        deleteUser(data.uid, data.name);
+                    });
+                });
+            });
+        }
+
         function approveUser(uid, runner1Name, runner2Name, teamName) {
             if (!isAdmin) return;
             
-            // 1. Criar o perfil de usuário padrão
             const defaultProfile = {
                 runner1Name: runner1Name,
                 runner2Name: runner2Name || "Corredor(a) 2",
                 teamName: teamName || "Minha Equipe"
             };
-            
-            // 2. Criar o perfil público padrão
             const defaultPublicProfile = {
                 runner1Name: runner1Name,
                 runner2Name: runner2Name || "Corredor(a) 2",
@@ -1639,6 +1760,44 @@
                 });
         }
         
+        // NOVA FUNÇÃO
+        function rejectUser(uid, email) {
+            if (!isAdmin) return;
+            if (!confirm(`Tem certeza que deseja RECUSAR o cadastro de ${email}?\n\nIsso removerá a solicitação. O usuário não poderá acessar o sistema.`)) return;
+
+            // Apenas remove a solicitação. O usuário ficará "órfão" no Auth e cairá na tela de "Recusado" se tentar logar.
+            firebase.database().ref('/pendingApprovals/' + uid).remove()
+                .then(() => {
+                    alert(`Usuário ${email} recusado.`);
+                })
+                .catch((err) => {
+                    console.error("Erro ao recusar:", err);
+                    alert("Erro ao recusar usuário.");
+                });
+        }
+        
+        // NOVA FUNÇÃO
+        function deleteUser(uid, name) {
+            if (!isAdmin) return;
+            if (!confirm(`ATENÇÃO!\n\nTem certeza que deseja EXCLUIR PERMANENTEMENTE o usuário ${name}?\n\nTODOS os dados (perfil, corridas) serão apagados e não poderão ser recuperados.`)) return;
+            
+            // NÃO PODEMOS DELETAR O USUÁRIO DO "AUTH" PELO CLIENT-SIDE.
+            // Apenas deletamos seus dados do Realtime Database.
+            
+            const updates = {};
+            updates[`/users/${uid}`] = null; // Deleta perfil e corridas
+            updates[`/publicProfiles/${uid}`] = null; // Deleta card público
+            
+             firebase.database().ref().update(updates)
+                .then(() => {
+                    alert(`Usuário ${name} excluído com sucesso.`);
+                })
+                .catch((err) => {
+                    console.error("Erro ao excluir:", err);
+                    alert("Erro ao excluir usuário.");
+                });
+        }
+        
         
         // --- Funções de Autenticação (Firebase Auth) ---
         
@@ -1646,7 +1805,6 @@
              dom.loginError.textContent = message;
         }
 
-        // NOVO: Alterna a UI entre Login e Cadastro
         function toggleLoginMode(isSigningUp) {
             if (isSigningUp) {
                 dom.loginTitle.textContent = "Cadastrar Novo Usuário";
@@ -1664,7 +1822,6 @@
             dom.loginError.textContent = '';
         }
 
-        // ATUALIZADO: handleSignUp agora lê os novos campos
         function handleSignUp(e) {
             e.preventDefault();
             const email = dom.loginEmail.value;
@@ -1687,7 +1844,6 @@
                 .then((userCredential) => {
                     const user = userCredential.user;
                     
-                    // CRIA A SOLICITAÇÃO DE APROVAÇÃO com os nomes
                     const pendingRef = firebase.database().ref('/pendingApprovals/' + user.uid);
                     pendingRef.set({
                         email: user.email,
@@ -1699,8 +1855,8 @@
                     
                     console.log("Novo usuário cadastrado e aguardando aprovação:", user.uid);
                     dom.loginForm.reset();
-                    toggleLoginMode(false); // Volta para a tela de login
-                    showLoginError("Cadastro realizado! Aguardando aprovação do admin.");
+                    toggleLoginMode(false); 
+                    showLoginError("Cadastro realizado! Aguardando aprovação do admin."); 
                 })
                 .catch(err => {
                     console.error("Erro no cadastro:", err.code, err.message);
@@ -1730,7 +1886,9 @@
         }
 
         function signOut() {
+            // Desliga listeners de tempo real
             firebase.database().ref('/pendingApprovals').off();
+            firebase.database().ref('/publicProfiles').off();
             if(currentViewingUid) {
                 firebase.database().ref(`/users/${currentViewingUid}/profile`).off();
                 firebase.database().ref(`/users/${currentViewingUid}/races`).off();
@@ -1768,33 +1926,40 @@
             dom.btnLoginSubmit.addEventListener('click', handleSignIn);
             dom.btnSignUpSubmit.addEventListener('click', handleSignUp);
             dom.btnLogout.addEventListener('click', signOut);
-            
-            // NOVO: Listener do Botão Voltar
             dom.btnBackToPublic.addEventListener('click', showLoggedOutView);
-            
-            // NOVO: Listener do Toggle Login/Cadastro
             dom.loginToggleLink.addEventListener('click', () => {
-                // Se os campos de cadastro estão escondidos, mostre-os (modo cadastro)
                 const isSigningUp = dom.signupFields.classList.contains('hidden');
                 toggleLoginMode(isSigningUp);
             });
             
-            // Configuração inicial da UI de login
             toggleLoginMode(false);
 
-            // Gerenciador Central de Estado de Autenticação (ROTEADOR PRINCIPAL)
+            // Gerenciador Central de Estado de Autenticação (ROTEADOR V3.5)
             auth.onAuthStateChanged((user) => {
                 if (user) {
                     // --- USUÁRIO LOGADO ---
                     authUser = user;
-                    // UID ADMIN 
                     isAdmin = user.uid === '29d30W4RS1WzK4SWZRZ5pEFnOdm1'; 
                     
-                    firebase.database().ref('/users/' + user.uid).once('value', (snapshot) => {
-                        if (snapshot.exists() || isAdmin) {
+                    // ROTEAMENTO DE 3 ETAPAS
+                    // 1. O usuário está aprovado (existe em /users)?
+                    firebase.database().ref('/users/' + user.uid).once('value', (userSnapshot) => {
+                        if (userSnapshot.exists() || isAdmin) {
+                            // SIM: Mostrar dashboard (se for admin, o dashboard incluirá o painel de admin)
                             showUserDashboard(user);
                         } else {
-                            showPendingView();
+                            // NÃO: O usuário não está aprovado.
+                            // 2. Ele está na lista de pendentes?
+                            firebase.database().ref('/pendingApprovals/' + user.uid).once('value', (pendingSnapshot) => {
+                                if (pendingSnapshot.exists()) {
+                                    // SIM: Mostrar tela de "Aguardando Aprovação"
+                                    showPendingView(); 
+                                } else {
+                                    // NÃO: Ele não está aprovado E não está pendente.
+                                    // 3. Isso significa que ele foi RECUSADO ou EXCLUÍDO.
+                                    showRejectedView(user.email);
+                                }
+                            });
                         }
                     });
 
