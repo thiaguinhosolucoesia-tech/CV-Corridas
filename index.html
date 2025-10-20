@@ -1985,7 +1985,10 @@
                                     showRejectedView(user.email);
                                 }
                             }, (error) => {
-                                // NOVO: Tratamento de erro se a regra V3.6 não estiver aplicada
+                                // CORREÇÃO V3.6 ESTÁ AQUI:
+                                // Se a leitura de /pendingApprovals falhar, é porque as Regras de Segurança
+                                // da V3.5 (minha resposta anterior) estavam erradas.
+                                // A V3.6 (esta resposta) corrige as regras para permitir esta leitura.
                                 if(error.code === "PERMISSION_DENIED") {
                                     console.error("ERRO DE REGRAS: O usuário não-admin não tem permissão para ler /pendingApprovals. Verifique as Regras de Segurança (Fase 2).");
                                     showLoggedOutView(); // Desloga o usuário para evitar loop
