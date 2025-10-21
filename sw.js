@@ -1,5 +1,6 @@
+
 // Define o nome do cache
-const CACHE_NOME = 'curriculo-corredores-v3'; // NOVO: Alterado de v2 para v3
+const CACHE_NOME = 'curriculo-corredores-v2';
 
 // Lista de arquivos exatos do seu projeto para o App Shell
 // Caminhos relativos para funcionar no GitHub Pages
@@ -19,31 +20,31 @@ const listaUrlsParaCache = [
 
 // Evento 'install': Salva os arquivos do App Shell no cache
 self.addEventListener('install', (event) => {
-  console.log('[ServiceWorker] Instalando (v3)...'); // NOVO: Log atualizado
+  console.log('[ServiceWorker] Instalando...');
   event.waitUntil(
     caches.open(CACHE_NOME)
       .then((cache) => {
-        console.log('[ServiceWorker] Abrindo cache e salvando o App Shell (v3)'); // NOVO: Log atualizado
+        console.log('[ServiceWorker] Abrindo cache e salvando o App Shell');
         return cache.addAll(listaUrlsParaCache);
       })
       .then(() => {
-        console.log('[ServiceWorker] Instalação completa (v3), App Shell cacheado.'); // NOVO: Log atualizado
+        console.log('[ServiceWorker] Instalação completa, App Shell cacheado.');
         return self.skipWaiting(); // Força o novo SW a ativar
       })
       .catch((error) => {
-        console.error('[ServiceWorker] Falha ao cachear o App Shell (v3):', error); // NOVO: Log atualizado
+        console.error('[ServiceWorker] Falha ao cachear o App Shell:', error);
       })
   );
 });
 
 // Evento 'activate': Limpa caches antigos
 self.addEventListener('activate', (event) => {
-  console.log('[ServiceWorker] Ativando (v3)...'); // NOVO: Log atualizado
+  console.log('[ServiceWorker] Ativando...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          // Deleta caches que não sejam o cache atual (ex: v2)
+          // Deleta caches que não sejam o cache atual
           if (cacheName !== CACHE_NOME) {
             console.log('[ServiceWorker] Limpando cache antigo:', cacheName);
             return caches.delete(cacheName);
@@ -51,7 +52,7 @@ self.addEventListener('activate', (event) => {
         })
       );
     }).then(() => {
-        console.log('[ServiceWorker] Ativado (v3) e pronto para controlar a página.'); // NOVO: Log atualizado
+        console.log('[ServiceWorker] Ativado e pronto para controlar a página.');
         return self.clients.claim(); // Torna-se o SW controlador imediatamente
     })
   );
