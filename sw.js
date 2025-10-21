@@ -1,4 +1,3 @@
-
 // Define o nome do cache
 const CACHE_NOME = 'curriculo-corredores-v2';
 
