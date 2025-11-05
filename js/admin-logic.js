@@ -1,5 +1,5 @@
 // =================================================================
-// ARQUIVO DE LÓGICA DO PAINEL DE ADMIN (V3 - Fundido V1+V2)
+// ARQUIVO DE LÓGICA DO PAINEL DE ADMIN (V4 - Rede Social)
 // =================================================================
 
 // Esta função é o ponto de entrada, chamada pelo main-logic.js se o usuário for admin
@@ -9,6 +9,8 @@ function initializeAdminPanel(adminUid, db) {
     // --- Cache de Elementos DOM do Admin ---
     const adminDom = {
         adminPanel: document.getElementById('admin-panel'),
+        adminToggleBtn: document.getElementById('admin-toggle-btn'),
+        adminPanelContent: document.getElementById('admin-panel-content'),
         // V1 (Usuários)
         pendingList: document.getElementById('pending-list'),
         approvedList: document.getElementById('approved-list'),
@@ -44,17 +46,29 @@ function initializeAdminPanel(adminUid, db) {
 
     // --- Listeners de Eventos do Admin ---
     function addAdminEventListeners() {
+        if (adminDom.adminToggleBtn) { 
+            adminDom.adminToggleBtn.addEventListener('click', toggleAdminPanel);
+        }
+
+        // V2
         adminDom.raceForm.addEventListener('submit', handleRaceFormSubmit);
         adminDom.clearFormButton.addEventListener('click', clearForm);
         adminDom.uploadResultsButton.addEventListener('click', handleResultsUpload);
         adminDom.uploadRankingButton.addEventListener('click', handleRankingUpload);
     }
+    
+    function toggleAdminPanel() {
+        const isCollapsed = adminDom.adminPanel.classList.toggle('collapsed');
+        adminDom.adminToggleBtn.textContent = isCollapsed ? 'Mostrar' : 'Ocultar';
+    }
+
 
     // ======================================================
     // SEÇÃO DE ADMIN V1: GESTÃO DE USUÁRIOS
     // ======================================================
 
     function loadPendingList() {
+        // REVERTIDO PARA O CÓDIGO ORIGINAL QUE FUNCIONA
         const pendingRef = db.ref('/pendingApprovals');
         pendingRef.on('value', (snapshot) => {
             const requests = snapshot.val();
@@ -113,23 +127,37 @@ function initializeAdminPanel(adminUid, db) {
             }
             
             Object.entries(profiles).forEach(([uid, profile]) => {
-                // O Admin não aparece na lista para ser excluído
                 if (uid === adminUid) return; 
                 
                 const item = document.createElement('div');
                 item.className = 'approved-item';
+                
                 item.innerHTML = `
                     <div class="approved-item-info">
                         ${profile.runner1Name} ${profile.runner2Name ? '& ' + profile.runner2Name : ''}
                         <span>Equipe: ${profile.teamName || 'N/A'}</span>
                     </div>
                     <div class="admin-buttons">
+                        <button class="btn-edit-user" 
+                            data-uid="${uid}" 
+                            data-r1="${profile.runner1Name || ''}" 
+                            data-r2="${profile.runner2Name || ''}" 
+                            data-team="${profile.teamName || ''}">
+                            Editar
+                        </button>
                         <button class="btn-delete-user" data-uid="${uid}" data-name="${profile.runner1Name}">Excluir</button>
                     </div>
                 `;
                 adminDom.approvedList.appendChild(item);
             });
 
+            adminDom.approvedList.querySelectorAll('.btn-edit-user').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const data = e.target.dataset;
+                    editUser(data.uid, data.r1, data.r2, data.team);
+                });
+            });
+            
             adminDom.approvedList.querySelectorAll('.btn-delete-user').forEach(button => {
                 button.addEventListener('click', (e) => {
                     const data = e.target.dataset;
@@ -137,6 +165,40 @@ function initializeAdminPanel(adminUid, db) {
                 });
             });
         });
+    }
+
+    function editUser(uid, currentR1, currentR2, currentTeam) {
+        const newR1 = prompt("Nome Corredor 1:", currentR1);
+        if (newR1 === null) return; 
+        if (newR1.trim() === "") {
+            alert("O 'Nome Corredor 1' não pode ficar vazio.");
+            return;
+        }
+
+        const newR2 = prompt("Nome Corredor 2 (Deixe VAZIO para remover):", currentR2);
+        if (newR2 === null) return; 
+
+        const newTeam = prompt("Nome da Equipe:", currentTeam);
+        if (newTeam === null) return; 
+
+        const updates = {};
+        const profileData = {
+            runner1Name: newR1.trim(),
+            runner2Name: newR2.trim() || "", 
+            teamName: newTeam.trim() || "Equipe" 
+        };
+
+        updates[`/users/${uid}/profile`] = profileData;
+        updates[`/publicProfiles/${uid}`] = profileData; 
+
+        db.ref().update(updates)
+            .then(() => {
+                alert(`Usuário ${newR1} atualizado com sucesso!`);
+            })
+            .catch((err) => {
+                console.error("Erro ao atualizar usuário:", err);
+                alert("Erro ao atualizar usuário.");
+            });
     }
 
     function approveUser(uid, runner1Name, runner2Name, teamName) {
@@ -341,15 +403,44 @@ function initializeAdminPanel(adminUid, db) {
     }
     
     function processAndUploadResults(raceId, resultsData) {
-        updateStatus("Enviando resultados da etapa...", "loading", 'results');
-        db.ref('resultadosEtapas/' + raceId).set(resultsData)
+        updateStatus("Processando e enviando resultados da etapa...", "loading", 'results');
+
+        // 1. Agrupar por categoria para calcular o total
+        const groupedByCategory = {};
+        resultsData.forEach(athlete => {
+            const category = athlete.category;
+            if (!groupedByCategory[category]) {
+                groupedByCategory[category] = [];
+            }
+            groupedByCategory[category].push(athlete);
+        });
+
+        // 2. Adicionar a informação de colocação/total a cada registro
+        const processedResults = [];
+        for (const category in groupedByCategory) {
+            const athletes = groupedByCategory[category];
+            const totalParticipants = athletes.length;
+            
+            athletes.forEach(athlete => {
+                try {
+                    const placement = parseInt(athlete.placement);
+                    // Formato solicitado: "Colocação de um total de Total"
+                    athlete.placement_info = `${placement} de um total de ${totalParticipants}`;
+                } catch (e) {
+                    athlete.placement_info = ""; // Caso o placement não seja um número
+                }
+                processedResults.push(athlete);
+            });
+        }
+
+        // 3. Upload para o Firebase
+        db.ref('resultadosEtapas/' + raceId).set(processedResults)
             .then(() => updateStatus("Resultados da etapa atualizados com sucesso!", "success", 'results'))
             .catch(error => updateStatus(`Falha no envio: ${error.message}`, "error", 'results'));
     }
 
     function uploadFinalRanking(rankingData) {
         updateStatus("Enviando ranking final...", "loading", 'ranking');
-        // NOTA: O V2 envia para 'rankingCopaAlcer'. Vamos manter essa estrutura.
         db.ref('rankingCopaAlcer').set(rankingData)
             .then(() => updateStatus("Ranking final atualizado com sucesso!", "success", 'ranking'))
             .catch(error => updateStatus(`Falha no envio: ${error.message}`, "error", 'ranking'));
@@ -359,8 +450,8 @@ function initializeAdminPanel(adminUid, db) {
         const statusElement = target === 'ranking' ? adminDom.uploadRankingStatus : adminDom.uploadResultsStatus;
         statusElement.textContent = message;
         statusElement.className = 'upload-status ';
-        if (type === 'success') statusElement.classList.add('text-green-500'); // Corrigido para verde
-        else if (type === 'error') statusElement.classList.add('text-red-500'); // Corrigido para vermelho
-        else statusElement.classList.add('text-yellow-500'); // Corrigido para amarelo
+        if (type === 'success') statusElement.classList.add('text-green-500'); 
+        else if (type === 'error') statusElement.classList.add('text-red-500'); 
+        else statusElement.classList.add('text-yellow-500'); 
     }
 }
