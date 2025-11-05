@@ -3,7 +3,7 @@
 /* V12 - CORREÇÃO FINAL flex-shrink (CAMPO PRETO)    */
 /* V13 - ATUALIZADO COM TAREFA 2 (Excluir Mídia)     */
 /* V19 - CORREÇÃO SÊNIOR (Bug Tremer/Quadro Preto)   */
-/* V20 - CORREÇÃO HÍBRIDA (V19 + Animação Grid V13)  */
+/* V21 - REMOVIDA ANIMAÇÃO (CAUSA DO CRASH)          */
 /* ================================================= */
 * {
     margin: 0;
@@ -1397,7 +1397,7 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); }
 }
 /* ================================================= */
 /* ESTILOS PARA SEÇÃO RECOLHÍVEL (Layout V9.1)       */
-/* V20 - RESTAURANDO O MÉTODO 'display: grid' (V13)  */
+/* V21 - REMOVIDA ANIMAÇÃO (CAUSA DO CRASH)          */
 /* ================================================= */
 .section-header-collapsible {
     display: flex;
@@ -1430,30 +1430,26 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); }
     background: rgba(255, 255, 255, 0.2);
 }
 
-/* --- CORREÇÃO V20: Restaurando V9.7 (Animação com Grid + Padding) --- */
+/* --- CORREÇÃO V21: Removendo animação (Causa do Crash) --- */
 .collapsible-content {
-    display: grid;
-    /* Inicia com 1fr (uma fração, ou seja, altura total do conteúdo) */
-    grid-template-rows: 1fr; 
-    /* Transição para a altura do grid E o padding */
-    transition: grid-template-rows 0.4s ease-out, padding 0.4s ease-out, opacity 0.3s ease-out;
+    /* Sem transição, sem grid-template-rows */
+    display: block; /* Apenas exibe */
     opacity: 1;
-    /* Padding e background movidos para cá (de .history-section) */
     padding: 30px;
     background: transparent;
+    /* Adicionando isso para garantir que o conteúdo interno não cause problemas */
+    overflow: hidden; 
 }
 .collapsible-content.collapsed {
-    /* Anima para 0fr (altura zero) */
-    grid-template-rows: 0fr; 
+    /* Sem transição, apenas oculta */
+    display: none; 
     opacity: 0;
     /* Remove o padding quando recolhido */
     padding-top: 0;
     padding-bottom: 0;
 }
-/* Esta regra é essencial para a animação do grid funcionar */
-.collapsible-content > * {
-    overflow: hidden;
-}
+/* A regra "> *" (overflow: hidden) da V13 não é mais necessária */
+
 
 /* Rotação do ícone do botão (Invertida para V9.5) */
 /* O ícone "para baixo" (colapsado) é o estado padrão */
