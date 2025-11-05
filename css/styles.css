@@ -3,6 +3,7 @@
 /* V12 - CORREÇÃO FINAL flex-shrink (CAMPO PRETO)    */
 /* V13 - ATUALIZADO COM TAREFA 2 (Excluir Mídia)     */
 /* V19 - CORREÇÃO SÊNIOR (Bug Tremer/Quadro Preto)   */
+/* V20 - CORREÇÃO HÍBRIDA (V19 + Animação Grid V13)  */
 /* ================================================= */
 * {
     margin: 0;
@@ -36,7 +37,7 @@ html, body {
     /* --- Correção Layout Flex --- */
     display: flex;
     flex-direction: column;
-    /* min-height: calc(100vh - 40px); */ /* REMOVIDO - CAUSA O CAMPO PRETO */
+    /* min-height: calc(100vh - 40px); */ /* REMOVIDO (V19) - CAUSA O CAMPO PRETO / TREMELIQUE */
 }
 /* ================================================= */
 /* CABEÇALHO (HEADER - V5)                           */
@@ -270,7 +271,7 @@ html, body {
     padding: 40px 30px;
     background: #1a1a2e;
     text-align: center;
-    /* flex-grow: 1; */ /* REMOVIDO - CAUSA O CAMPO PRETO */
+    /* flex-grow: 1; */ /* REMOVIDO (V19) - CAUSA O CAMPO PRETO / TREMELIQUE */
 }
 #pending-approval-view, #rejected-view {
      padding: 60px 30px;
@@ -790,7 +791,7 @@ html, body {
     text-align: center;
     background: #1f2027;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    /* flex-grow: 1; */ /* REMOVIDO V11 - Causa do "Campo Preto" */
+    /* flex-grow: 1; */ /* REMOVIDO (V19) - Causa do "Campo Preto" / Tremelique */
 }
 #public-view h2 {
     color: #c5cae9;
@@ -870,7 +871,7 @@ html, body {
 /* *** CORREÇÃO V11: REMOVIDO 'flex-grow: 1' DAQUI *** */
 #user-content {
     /* Esta view só é mostrada quando logada */
-    /* flex-grow: 1; */ /* REMOVIDO V11 */
+    /* flex-grow: 1; */ /* REMOVIDO (V19) - Causa o "Campo Preto" / Tremelique */
 }
 .dashboard-section {
     padding: 30px;
@@ -1358,7 +1359,7 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); }
         margin: 0; 
         border-radius: 0; 
         border: none; 
-        /* min-height: 100vh; <-- CORREÇÃO V18: Esta linha foi removida */
+        /* min-height: 100vh; <-- CORREÇÃO V19: Esta linha foi removida (CAUSA DO TREMELIQUE) */
         width: 100%; /* Garante que o container use 100% da largura */
     }
     .auth-controls { position: static; justify-content: center; padding-bottom: 15px; flex-wrap: wrap; }
@@ -1396,9 +1397,7 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); }
 }
 /* ================================================= */
 /* ESTILOS PARA SEÇÃO RECOLHÍVEL (Layout V9.1)       */
-/* V18 - CORREÇÃO SÊNIOR (Bug Tremer/Quadro Preto)   */
-/* Revertendo para 'max-height' E REMOVENDO 'padding'*/
-/* E REMOVENDO a regra do filho (overflow: hidden)   */
+/* V20 - RESTAURANDO O MÉTODO 'display: grid' (V13)  */
 /* ================================================= */
 .section-header-collapsible {
     display: flex;
@@ -1431,30 +1430,30 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); }
     background: rgba(255, 255, 255, 0.2);
 }
 
-/* --- CORREÇÃO V18: Revertendo para max-height (V15) --- */
+/* --- CORREÇÃO V20: Restaurando V9.7 (Animação com Grid + Padding) --- */
 .collapsible-content {
-    max-height: 10000px; /* Valor alto para acomodar qualquer conteúdo */
-    overflow: hidden;
-    /* Transição SOMENTE para max-height E opacidade (V15) */
-    transition: max-height 0.5s ease-out, opacity 0.3s ease-out;
+    display: grid;
+    /* Inicia com 1fr (uma fração, ou seja, altura total do conteúdo) */
+    grid-template-rows: 1fr; 
+    /* Transição para a altura do grid E o padding */
+    transition: grid-template-rows 0.4s ease-out, padding 0.4s ease-out, opacity 0.3s ease-out;
     opacity: 1;
     /* Padding e background movidos para cá (de .history-section) */
     padding: 30px;
     background: transparent;
 }
 .collapsible-content.collapsed {
-    max-height: 0;
+    /* Anima para 0fr (altura zero) */
+    grid-template-rows: 0fr; 
     opacity: 0;
-    /* O padding é alterado instantaneamente (sem transição) */
+    /* Remove o padding quando recolhido */
     padding-top: 0;
     padding-bottom: 0;
 }
-/* --- CORREÇÃO V18: Removendo a regra do filho (V13) que causava o conflito --- */
-/* A REGRA ABAIXO FOI REMOVIDA:
+/* Esta regra é essencial para a animação do grid funcionar */
 .collapsible-content > * {
     overflow: hidden;
 }
-*/
 
 /* Rotação do ícone do botão (Invertida para V9.5) */
 /* O ícone "para baixo" (colapsado) é o estado padrão */
