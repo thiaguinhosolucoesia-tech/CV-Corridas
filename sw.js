@@ -1,7 +1,7 @@
 // sw.js
 
 // Define o nome do cache
-const CACHE_NOME = 'curriculo-corredores-v15'; // Versão atualizada
+const CACHE_NOME = 'curriculo-corredores-v16'; // Versão atualizada
 
 // Lista de arquivos exatos do seu projeto para o App Shell
 const listaUrlsParaCache = [
