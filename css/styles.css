@@ -3,7 +3,7 @@
 /* V12 - CORREÇÃO FINAL flex-shrink (CAMPO PRETO)    */
 /* V13 - ATUALIZADO COM TAREFA 2 (Excluir Mídia)     */
 /* V19 - CORREÇÃO SÊNIOR (Bug Tremer/Quadro Preto)   */
-/* V21 - REMOVIDA ANIMAÇÃO (CAUSA DO CRASH)          */
+/* V22 - REMOVIDO 'overflow:hidden' (Quadro Preto)   */
 /* ================================================= */
 * {
     margin: 0;
@@ -966,8 +966,8 @@ html, body {
     /* padding: 30px; */ /* <-- REMOVIDO V9.7 */
     /* background: transparent; */ /* <-- REMOVIDO V9.7 */
     /* flex-shrink: 0; */ /* REMOVIDO V11 */
-    /* --- CORREÇÃO V15: Adicionado overflow:hidden --- */
-    overflow: hidden; /* Essencial para a animação do grid funcionar */
+    /* --- CORREÇÃO V22: REMOVIDO overflow:hidden (obsoleto, causava bug layout) --- */
+    /* overflow: hidden; */
     /* --- CORREÇÃO V15: Removido height/min-height --- */
     /* height: auto; */ /* Se estiver definido, remova */
     /* min-height: 0; */ /* Se estiver definido, remova */
@@ -1397,7 +1397,7 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); }
 }
 /* ================================================= */
 /* ESTILOS PARA SEÇÃO RECOLHÍVEL (Layout V9.1)       */
-/* V21 - REMOVIDA ANIMAÇÃO (CAUSA DO CRASH)          */
+/* V22 - REMOVIDO 'overflow:hidden' (Quadro Preto)   */
 /* ================================================= */
 .section-header-collapsible {
     display: flex;
@@ -1430,15 +1430,15 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); }
     background: rgba(255, 255, 255, 0.2);
 }
 
-/* --- CORREÇÃO V21: Removendo animação (Causa do Crash) --- */
+/* --- CORREÇÃO V22: Removendo animação e overflow --- */
 .collapsible-content {
     /* Sem transição, sem grid-template-rows */
     display: block; /* Apenas exibe */
     opacity: 1;
     padding: 30px;
     background: transparent;
-    /* Adicionando isso para garantir que o conteúdo interno não cause problemas */
-    overflow: hidden; 
+    /* --- CORREÇÃO V22: REMOVIDO overflow:hidden (obsoleto, causava bug layout) --- */
+    /* overflow: hidden; */
 }
 .collapsible-content.collapsed {
     /* Sem transição, apenas oculta */
@@ -1448,7 +1448,6 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); }
     padding-top: 0;
     padding-bottom: 0;
 }
-/* A regra "> *" (overflow: hidden) da V13 não é mais necessária */
 
 
 /* Rotação do ícone do botão (Invertida para V9.5) */
